@@ -1,0 +1,2 @@
+// MySQL connection pool. Reads credentials from .env via dotenv.
+// To be implemented in the next phase.

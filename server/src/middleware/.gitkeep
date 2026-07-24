@@ -1,0 +1,2 @@
+// Express middleware (auth guard, error handler, role check, etc.)
+// To be implemented in the next phase.
