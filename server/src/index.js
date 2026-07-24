@@ -131,15 +131,26 @@ app.use((err, req, res, next) => {
 
 
 // =============================================================================
-// START THE SERVER
-// Read the port from .env (default to 5000 if not set)
+// START THE SERVER (Local Development)
+// Read the port from .env (default to 5000 if not set).
+// Only listen when running directly locally, not when imported as a module by Vercel.
 // =============================================================================
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log('========================================================');
-  console.log(`  Hospital Ward Management API is running`);
-  console.log(`  Server listening on http://localhost:${PORT}`);
-  console.log(`  Environment: ${process.env.NODE_ENV}`);
-  console.log('========================================================');
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log('========================================================');
+    console.log(`  Hospital Ward Management API is running`);
+    console.log(`  Server listening on http://localhost:${PORT}`);
+    console.log(`  Environment: ${process.env.NODE_ENV}`);
+    console.log('========================================================');
+  });
+}
+
+// =============================================================================
+// EXPORT THE EXPRESS APP
+// Exporting the app allows Vercel serverless functions to process API requests.
+// =============================================================================
+module.exports = app;
+
+
