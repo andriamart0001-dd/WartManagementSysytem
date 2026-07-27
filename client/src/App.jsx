@@ -9,6 +9,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import { ROLES, ROLE_DASHBOARDS } from './constants';
 
 // Layouts & Route Wrappers
@@ -44,66 +45,68 @@ const RootRedirect = () => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Auth Routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Auth Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          {/* Root Redirect */}
-          <Route path="/" element={<RootRedirect />} />
+            {/* Root Redirect */}
+            <Route path="/" element={<RootRedirect />} />
 
-          {/* Authenticated Application Layout Shell */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
+            {/* Authenticated Application Layout Shell */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
 
-              {/* 1. Admin Role Dashboard */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
+                {/* 1. Admin Role Dashboard */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* 2. Ward Admin Role Dashboard */}
-              <Route
-                path="/ward-admin"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
-                    <WardAdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
+                {/* 2. Ward Admin Role Dashboard */}
+                <Route
+                  path="/ward-admin"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
+                      <WardAdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* 3. Staff Role Dashboard */}
-              <Route
-                path="/staff"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
-                    <StaffDashboard />
-                  </ProtectedRoute>
-                }
-              />
+                {/* 3. Staff Role Dashboard */}
+                <Route
+                  path="/staff"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                      <StaffDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* 4. Doctor Role Dashboard */}
-              <Route
-                path="/doctor"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.DOCTOR]}>
-                    <DoctorDashboard />
-                  </ProtectedRoute>
-                }
-              />
+                {/* 4. Doctor Role Dashboard */}
+                <Route
+                  path="/doctor"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.DOCTOR]}>
+                      <DoctorDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
+              </Route>
             </Route>
-          </Route>
 
-          {/* Fallback Catch-All Route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Fallback Catch-All Route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

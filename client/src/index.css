@@ -1,43 +1,53 @@
 /* =============================================================================
    index.css — Master Design System & Component Styling
+   Hospital Ward Management System
    ============================================================================= */
 
 /* -----------------------------------------------------------------------------
    1. CSS CUSTOM PROPERTIES (DESIGN TOKENS)
    ----------------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+
 :root {
-  /* Color Palette — Slate & Healthcare Teal/Blue */
-  --color-bg-main: #f8fafc;
-  --color-bg-surface: #ffffff;
-  --color-bg-sidebar: #0f172a;
+  /* Color Palette */
+  --primary: #0369A1;
+  --primary-dark: #0c4a6e;
+  --primary-light: #e0f2fe;
   
-  --color-text-main: #0f172a;
-  --color-text-muted: #64748b;
-  --color-text-light: #94a3b8;
+  --bg-main: #f0f4f8;
+  --bg-surface: #ffffff;
+  --sidebar-bg: #0c1a2e;
+  --sidebar-accent: #1e3a5f;
   
-  --color-primary: #0284c7;
-  --color-primary-hover: #0369a1;
-  --color-primary-light: #e0f2fe;
-  
-  --color-error: #ef4444;
-  --color-error-bg: #fef2f2;
-  --color-error-border: #fca5a5;
-  
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+
   /* Role Colors */
-  --role-admin: #8b5cf6;
+  --role-admin: #7C3AED;
   --role-admin-bg: #f3e8ff;
-  --role-ward-admin: #0284c7;
+  --role-ward-admin: #0284C7;
   --role-ward-admin-bg: #e0f2fe;
-  --role-staff: #10b981;
+  --role-staff: #059669;
   --role-staff-bg: #d1fae5;
-  --role-doctor: #ec4899;
+  --role-doctor: #DB2777;
   --role-doctor-bg: #fce7f3;
-  
-  /* Typography & Shadows */
-  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Status Colors */
+  --status-available: #10B981;
+  --status-occupied: #EF4444;
+  --status-maintenance: #F59E0B;
+  --status-admitted: #3B82F6;
+  --status-discharged: #6B7280;
+  --status-transferred: #F97316;
+  --status-in-use: #EF4444;
+  --status-shortage: #DC2626;
+
+  /* Typography */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Shadows & Radius */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -58,8 +68,8 @@
 
 body {
   font-family: var(--font-family);
-  background-color: var(--color-bg-main);
-  color: var(--color-text-main);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -69,10 +79,30 @@ a {
   color: inherit;
 }
 
+button {
+  font-family: inherit;
+}
+
 /* Keyframe Animations */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeInScale {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 /* -----------------------------------------------------------------------------
@@ -83,12 +113,13 @@ a {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0369a1 100%);
+  /* Diagonal gradient background as per plan */
+  background: linear-gradient(135deg, var(--sidebar-bg) 0%, var(--primary) 100%);
   padding: 24px;
 }
 
 .login-card {
-  background: #ffffff;
+  background: var(--bg-surface);
   border-radius: 16px;
   padding: 40px;
   width: 100%;
@@ -106,8 +137,8 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--primary-light);
+  color: var(--primary);
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.8px;
@@ -118,15 +149,15 @@ a {
 }
 
 .login-title {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .login-subtitle {
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.4;
 }
 
@@ -143,8 +174,8 @@ a {
 }
 
 .alert-error {
-  background-color: var(--color-error-bg);
-  border: 1px solid var(--color-error-border);
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
   color: #991b1b;
 }
 
@@ -155,9 +186,9 @@ a {
 
 .form-label {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-primary);
   margin-bottom: 6px;
 }
 
@@ -165,29 +196,28 @@ a {
   width: 100%;
   padding: 12px 14px;
   font-size: 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border);
   border-radius: var(--border-radius);
-  background-color: #ffffff;
-  color: var(--color-text-main);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
   transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
-  font-family: inherit;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.15); /* Using primary color rgba */
 }
 
 .form-input.input-error {
-  border-color: var(--color-error);
+  border-color: var(--status-occupied);
   background-color: #fff5f5;
 }
 
 .field-error-text {
   display: block;
   font-size: 12px;
-  color: var(--color-error);
+  color: var(--status-occupied);
   margin-top: 4px;
 }
 
@@ -195,7 +225,7 @@ a {
 .submit-button {
   width: 100%;
   padding: 14px;
-  background-color: var(--color-primary);
+  background-color: var(--primary);
   color: #ffffff;
   border: none;
   border-radius: var(--border-radius);
@@ -207,7 +237,7 @@ a {
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  background-color: var(--primary-dark);
 }
 
 .submit-button:disabled {
@@ -235,7 +265,7 @@ a {
 .quick-login-section {
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed var(--border);
 }
 
 .quick-login-divider {
@@ -247,16 +277,16 @@ a {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.8px;
-  color: #64748b;
-  background: #f8fafc;
+  color: var(--text-muted);
+  background: var(--bg-surface);
   padding: 4px 12px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .quick-login-hint {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
   text-align: center;
   margin-bottom: 12px;
 }
@@ -273,15 +303,15 @@ a {
   align-items: flex-start;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background-color: #ffffff;
+  border: 1px solid var(--border);
+  background-color: var(--bg-surface);
   cursor: pointer;
   text-align: left;
   transition: all var(--transition-speed);
 }
 
 .quick-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-sm);
 }
 
@@ -289,51 +319,36 @@ a {
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 2px;
+  color: var(--text-primary);
 }
 
 .quick-access-desc {
-  font-size: 10px;
-  color: #64748b;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
-.btn-admin {
-  border-left: 4px solid var(--role-admin);
-}
-.btn-admin:hover:not(:disabled) {
-  background-color: var(--role-admin-bg);
-}
+.btn-admin { border-left: 4px solid var(--role-admin); }
+.btn-admin:hover:not(:disabled) { background-color: var(--role-admin-bg); }
 
-.btn-ward-admin {
-  border-left: 4px solid var(--role-ward-admin);
-}
-.btn-ward-admin:hover:not(:disabled) {
-  background-color: var(--role-ward-admin-bg);
-}
+.btn-ward-admin { border-left: 4px solid var(--role-ward-admin); }
+.btn-ward-admin:hover:not(:disabled) { background-color: var(--role-ward-admin-bg); }
 
-.btn-staff {
-  border-left: 4px solid var(--role-staff);
-}
-.btn-staff:hover:not(:disabled) {
-  background-color: var(--role-staff-bg);
-}
+.btn-staff { border-left: 4px solid var(--role-staff); }
+.btn-staff:hover:not(:disabled) { background-color: var(--role-staff-bg); }
 
-.btn-doctor {
-  border-left: 4px solid var(--role-doctor);
-}
-.btn-doctor:hover:not(:disabled) {
-  background-color: var(--role-doctor-bg);
-}
+.btn-doctor { border-left: 4px solid var(--role-doctor); }
+.btn-doctor:hover:not(:disabled) { background-color: var(--role-doctor-bg); }
 
 .login-footer {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--bg-main);
   text-align: center;
 }
 
 .security-note {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 /* -----------------------------------------------------------------------------
@@ -348,8 +363,8 @@ a {
 /* Header Navbar */
 .navbar {
   height: 64px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -372,7 +387,7 @@ a {
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: #475569;
+  color: var(--text-muted);
 }
 
 .brand-container {
@@ -388,7 +403,7 @@ a {
 .brand-text {
   font-weight: 700;
   font-size: 16px;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 /* User Profile Summary */
@@ -407,7 +422,7 @@ a {
 .user-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 /* Role Badges */
@@ -415,38 +430,24 @@ a {
   font-size: 11px;
   font-weight: 700;
   padding: 3px 10px;
-  border-radius: 12px;
+  border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
-.badge-admin {
-  background-color: var(--role-admin-bg);
-  color: var(--role-admin);
-}
-
-.badge-ward-admin {
-  background-color: var(--role-ward-admin-bg);
-  color: var(--role-ward-admin);
-}
-
-.badge-staff {
-  background-color: var(--role-staff-bg);
-  color: var(--role-staff);
-}
-
-.badge-doctor {
-  background-color: var(--role-doctor-bg);
-  color: var(--role-doctor);
-}
+.badge-admin { background-color: var(--role-admin-bg); color: var(--role-admin); }
+.badge-ward-admin { background-color: var(--role-ward-admin-bg); color: var(--role-ward-admin); }
+.badge-staff { background-color: var(--role-staff-bg); color: var(--role-staff); }
+.badge-doctor { background-color: var(--role-doctor-bg); color: var(--role-doctor); }
+.badge-default { background-color: var(--bg-main); color: var(--text-muted); }
 
 .logout-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  background-color: var(--bg-main);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
   padding: 6px 14px;
   border-radius: 6px;
   font-size: 13px;
@@ -456,9 +457,9 @@ a {
 }
 
 .logout-button:hover {
-  background-color: var(--color-error-bg);
-  color: var(--color-error);
-  border-color: var(--color-error-border);
+  background-color: #fef2f2;
+  color: var(--status-occupied);
+  border-color: #fca5a5;
 }
 
 /* Layout Body */
@@ -469,9 +470,9 @@ a {
 
 /* Sidebar */
 .sidebar {
-  width: 250px;
-  background-color: var(--color-bg-sidebar);
-  color: #94a3b8;
+  width: 240px; /* Locked to 240px per design plan */
+  background-color: var(--sidebar-bg);
+  color: var(--text-muted);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -483,7 +484,7 @@ a {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: #64748b;
+  color: #64748b; /* Lighter muted for dark bg */
   margin-bottom: 12px;
   padding-left: 12px;
 }
@@ -507,12 +508,12 @@ a {
 }
 
 .nav-item:hover {
-  background-color: #1e293b;
+  background-color: var(--sidebar-accent);
   color: #ffffff;
 }
 
 .nav-item-active {
-  background-color: var(--color-primary);
+  background-color: var(--primary);
   color: #ffffff;
 }
 
@@ -522,7 +523,7 @@ a {
 
 .sidebar-footer {
   padding-top: 16px;
-  border-top: 1px solid #1e293b;
+  border-top: 1px solid var(--sidebar-accent);
 }
 
 .system-status-box {
@@ -530,79 +531,88 @@ a {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #94a3b8;
+  color: #cbd5e1;
 }
 
 .status-indicator {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: var(--color-success);
+  background-color: var(--status-available);
 }
 
 /* Content View Area */
 .content-area {
   flex: 1;
   padding: 32px;
-  background-color: var(--color-bg-main);
+  background-color: var(--bg-main);
   overflow-y: auto;
+  max-width: 1280px; /* Fluid max-width */
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* -----------------------------------------------------------------------------
    5. DASHBOARD PAGES STYLING
    ----------------------------------------------------------------------------- */
-.dashboard-page {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 .dashboard-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 32px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
+  /* Left border accent added via inline style or specific class in component */
 }
 
 .dashboard-title {
   font-size: 24px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .dashboard-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
 }
-
-.role-tag {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 20px;
-}
-
-.tag-admin { background-color: var(--role-admin-bg); color: var(--role-admin); }
-.tag-ward-admin { background-color: var(--role-ward-admin-bg); color: var(--role-ward-admin); }
-.tag-staff { background-color: var(--role-staff-bg); color: var(--role-staff); }
-.tag-doctor { background-color: var(--role-doctor-bg); color: var(--role-doctor); }
 
 /* Dashboard Cards Grid */
 .dashboard-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
 }
 
 .dash-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Adding the left-border color accent matching the card type */
+.dash-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--primary); /* Default */
+}
+
+/* Custom left borders for specific card types */
+.dash-card.card-available::before { background-color: var(--status-available); }
+.dash-card.card-occupied::before { background-color: var(--status-occupied); }
+.dash-card.card-maintenance::before { background-color: var(--status-maintenance); }
+.dash-card.card-shortage::before { 
+  background-color: var(--status-shortage); 
+  animation: pulse-border 1.5s infinite; /* Shortage pulse */
 }
 
 .dash-card:hover {
@@ -619,44 +629,162 @@ a {
 
 .card-icon {
   font-size: 24px;
-  background-color: #f1f5f9;
+  background-color: var(--bg-main);
   padding: 8px;
   border-radius: 8px;
 }
 
 .dash-card h3 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
-.card-description {
+.card-number {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 10px 0;
+}
+
+.card-breakdown {
   font-size: 13px;
-  color: #64748b;
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
-
-.card-status-pill {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 12px;
-}
-
-.pill-active {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.pill-pending {
-  background-color: #f1f5f9;
-  color: #64748b;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 /* -----------------------------------------------------------------------------
-   6. RESPONSIVE BREAKPOINTS
+   6. COMPONENTS (BADGES, TABLES)
+   ----------------------------------------------------------------------------- */
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.status-badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-available { background-color: #d1fae5; color: #059669; }
+.status-available::before { background-color: #059669; }
+
+.status-occupied { background-color: #fee2e2; color: #dc2626; }
+.status-occupied::before { background-color: #dc2626; }
+
+.status-maintenance { background-color: #fef3c7; color: #d97706; }
+.status-maintenance::before { background-color: #d97706; }
+
+.status-admitted { background-color: #dbeafe; color: #2563eb; }
+.status-admitted::before { background-color: #2563eb; }
+
+.status-discharged { background-color: #f1f5f9; color: #475569; }
+.status-discharged::before { background-color: #475569; }
+
+.status-transferred { background-color: #ffedd5; color: #ea580c; }
+.status-transferred::before { background-color: #ea580c; }
+
+.status-shortage { 
+  background-color: #fee2e2; 
+  color: #dc2626; 
+  border: 1px solid #dc2626;
+}
+.status-shortage::before { background-color: #dc2626; animation: pulse-border 1.5s infinite; }
+
+/* Data Tables */
+.table-container {
+  background: var(--bg-surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background-color: var(--bg-surface);
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+}
+
+.data-table td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table tbody tr {
+  background-color: var(--bg-surface);
+  transition: background-color var(--transition-speed);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.data-table tbody tr:hover {
+  background-color: #eff6ff;
+  cursor: pointer;
+}
+
+/* Quick Action Icons */
+.table-actions {
+  display: flex;
+  gap: 10px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.data-table tbody tr:hover .table-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+  background-color: #e2e8f0;
+}
+
+/* Monospaced Data */
+.mono-data {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* -----------------------------------------------------------------------------
+   7. RESPONSIVE BREAKPOINTS
    ----------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .mobile-toggle-btn {
@@ -670,10 +798,12 @@ a {
     bottom: 0;
     z-index: 40;
     transform: translateX(-100%);
+    width: 280px; /* Wider for touch targets on mobile */
   }
   
   .sidebar-open {
     transform: translateX(0);
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
   }
   
   .content-area {
