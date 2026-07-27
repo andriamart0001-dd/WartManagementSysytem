@@ -231,9 +231,52 @@ const dischargePatient = async (req, res) => {
   }
 };
 
+// =============================================================================
+// FUNCTION: getAllAdmissions (History)
+// =============================================================================
+const getAllAdmissions = async (req, res) => {
+  const { status, search } = req.query;
+
+  try {
+    let sql = `
+      SELECT a.*, w.wardName, b.bedNumber 
+      FROM patientAdmission a
+      JOIN ward w ON a.wardId = w.id
+      LEFT JOIN bed b ON a.bedId = b.id
+      WHERE 1=1
+    `;
+    const values = [];
+
+    if (status) {
+      // e.g. status=discharged or status=transferredOut
+      sql += ' AND a.status = ?';
+      values.push(status);
+    }
+
+    if (search) {
+      // Partial match on patientName
+      sql += ' AND a.patientName LIKE ?';
+      values.push(`%${search}%`);
+    }
+
+    sql += ' ORDER BY a.admissionDate DESC';
+    const [admissions] = await db.query(sql, values);
+
+    return res.status(200).json({
+      message: 'Admission history retrieved successfully',
+      count: admissions.length,
+      admissions
+    });
+  } catch (error) {
+    console.error('Get all admissions error:', error);
+    return res.status(500).json({ message: 'Error retrieving admission history' });
+  }
+};
+
 module.exports = {
   getAdmissions,
   getAdmissionById,
   createAdmission,
-  dischargePatient
+  dischargePatient,
+  getAllAdmissions
 };

@@ -22,6 +22,8 @@ import UnauthorizedPage from './pages/auth/UnauthorizedPage';
 
 // Role-Based Dashboards
 import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagementPage from './pages/admin/UserManagementPage';
+import WardManagementPage from './pages/admin/WardManagementPage';
 import WardAdminDashboard from './pages/wardAdmin/WardAdminDashboard';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
@@ -59,12 +61,28 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
 
-                {/* 1. Admin Role Dashboard */}
+                {/* 1. Admin Role Dashboard & Pages */}
                 <Route
                   path="/admin"
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
                       <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/users"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <UserManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/wards"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <WardManagementPage />
                     </ProtectedRoute>
                   }
                 />

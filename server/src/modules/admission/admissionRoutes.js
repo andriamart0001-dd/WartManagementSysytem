@@ -16,6 +16,13 @@ router.get('/',
   admissionController.getAdmissions
 );
 
+// GET /api/admissions/history - View all admission history (filtered by query)
+router.get('/history', 
+  authenticateJWT, 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  admissionController.getAllAdmissions
+);
+
 // GET /api/admissions/:id - View details of a specific admission
 router.get('/:id', 
   authenticateJWT, 

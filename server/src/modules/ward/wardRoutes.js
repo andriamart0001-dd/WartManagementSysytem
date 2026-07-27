@@ -45,7 +45,18 @@ router.get('/wards/:id',
 // Admin creates wards
 router.post('/wards', authenticateJWT, authorizeRoles(ROLES.ADMIN), wardController.createWard);
 
-// Admin and WardAdmin can update wards
-router.put('/wards/:id', authenticateJWT, authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN), wardController.updateWard);
+// PUT /api/wards/:id - Update an existing ward
+router.put('/wards/:id', 
+  authenticateJWT, 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN), 
+  wardController.updateWard
+);
+
+// DELETE /api/wards/:id - Delete a ward
+router.delete('/wards/:id', 
+  authenticateJWT, 
+  authorizeRoles(ROLES.ADMIN), 
+  wardController.deleteWard
+);
 
 module.exports = router;

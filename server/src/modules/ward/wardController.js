@@ -211,9 +211,52 @@ const updateWard = async (req, res) => {
   }
 };
 
+// =============================================================================
+// FUNCTION: deleteWard
+// =============================================================================
+const deleteWard = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // 1. Check if ward exists
+    const [existingWards] = await db.query('SELECT * FROM ward WHERE id = ? LIMIT 1', [id]);
+    if (existingWards.length === 0) {
+      return res.status(404).json({ message: 'Ward not found' });
+    }
+
+    // 2. Check if there are any active admissions in this ward
+    const [activeAdmissions] = await db.query(
+      'SELECT id FROM patientAdmission WHERE wardId = ? AND status = ? LIMIT 1', 
+      [id, 'admitted']
+    );
+    if (activeAdmissions.length > 0) {
+      return res.status(400).json({ 
+        message: 'Cannot delete ward. There are currently admitted patients in this ward.' 
+      });
+    }
+
+    // 3. Check if there are any beds in this ward
+    const [beds] = await db.query('SELECT id FROM bed WHERE wardId = ? LIMIT 1', [id]);
+    if (beds.length > 0) {
+      return res.status(400).json({ 
+        message: 'Cannot delete ward. There are beds assigned to this ward. Please remove or reassign the beds first.' 
+      });
+    }
+
+    // 4. Safe to delete
+    await db.query('DELETE FROM ward WHERE id = ?', [id]);
+
+    return res.status(200).json({ message: 'Ward deleted successfully' });
+  } catch (error) {
+    console.error('Delete ward error:', error);
+    return res.status(500).json({ message: 'Error deleting ward' });
+  }
+};
+
 module.exports = {
   getAllWards,
   getWardById,
   createWard,
-  updateWard
+  updateWard,
+  deleteWard
 };

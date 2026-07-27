@@ -281,9 +281,90 @@ const getHospitals = async (req, res) => {
   }
 };
 
+// =============================================================================
+// FUNCTION: getInternalTransferHistory
+// =============================================================================
+const getInternalTransferHistory = async (req, res) => {
+  const { admissionId } = req.query;
+
+  try {
+    let sql = `
+      SELECT t.*, a.patientName, w1.wardName AS fromWardName, w2.wardName AS toWardName, u.fullName AS transferredByName
+      FROM wardTransfer t
+      JOIN patientAdmission a ON t.admissionId = a.id
+      JOIN ward w1 ON t.fromWardId = w1.id
+      JOIN ward w2 ON t.toWardId = w2.id
+      JOIN users u ON t.transferredBy = u.id
+      WHERE 1=1
+    `;
+    const values = [];
+
+    if (admissionId) {
+      sql += ' AND t.admissionId = ?';
+      values.push(admissionId);
+    }
+
+    sql += ' ORDER BY t.transferDate DESC';
+
+    const [transfers] = await db.query(sql, values);
+
+    return res.status(200).json({
+      message: 'Internal transfer history retrieved successfully',
+      count: transfers.length,
+      transfers
+    });
+  } catch (error) {
+    console.error('Get internal transfer history error:', error);
+    return res.status(500).json({ message: 'Error retrieving internal transfer history' });
+  }
+};
+
+// =============================================================================
+// FUNCTION: getExternalTransferHistory
+// =============================================================================
+const getExternalTransferHistory = async (req, res) => {
+  const { admissionId, pending } = req.query;
+
+  try {
+    let sql = `
+      SELECT ht.*, a.patientName, h.hospitalName, u.fullName AS transferredByName
+      FROM hospitalTransfer ht
+      JOIN patientAdmission a ON ht.admissionId = a.id
+      JOIN hospital h ON ht.hospitalId = h.id
+      JOIN users u ON ht.transferredBy = u.id
+      WHERE 1=1
+    `;
+    const values = [];
+
+    if (admissionId) {
+      sql += ' AND ht.admissionId = ?';
+      values.push(admissionId);
+    }
+
+    if (pending === 'true') {
+      sql += ' AND ht.returnDate IS NULL';
+    }
+
+    sql += ' ORDER BY ht.transferOutDate DESC';
+
+    const [transfers] = await db.query(sql, values);
+
+    return res.status(200).json({
+      message: 'External transfer history retrieved successfully',
+      count: transfers.length,
+      transfers
+    });
+  } catch (error) {
+    console.error('Get external transfer history error:', error);
+    return res.status(500).json({ message: 'Error retrieving external transfer history' });
+  }
+};
+
 module.exports = {
   internalTransfer,
   externalTransfer,
   returnExternalTransfer,
-  getHospitals
+  getHospitals,
+  getInternalTransferHistory,
+  getExternalTransferHistory
 };

@@ -115,14 +115,33 @@ const AppLayout = () => {
             <nav className="sidebar-nav">
               {/* Role-Specific Navigation Links */}
               {user?.role === ROLES.ADMIN && (
-                <NavLink
-                  to="/admin"
-                  className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <span className="nav-icon">📊</span>
-                  <span>Admin Overview</span>
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/admin"
+                    end
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📊</span>
+                    <span>Admin Overview</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admin/users"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">👥</span>
+                    <span>Manage Users</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admin/wards"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🏥</span>
+                    <span>Manage Wards</span>
+                  </NavLink>
+                </>
               )}
 
               {user?.role === ROLES.WARD_ADMIN && (

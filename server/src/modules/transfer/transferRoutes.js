@@ -19,6 +19,28 @@ router.get('/hospitals',
   transferController.getHospitals
 );
 
+// =============================================================================
+// GET ROUTES - Transfer History
+// =============================================================================
+
+// GET /api/transfers/internal - View history of internal ward transfers
+router.get('/internal', 
+  authenticateJWT, 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  transferController.getInternalTransferHistory
+);
+
+// GET /api/transfers/external - View history of external hospital transfers
+router.get('/external', 
+  authenticateJWT, 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  transferController.getExternalTransferHistory
+);
+
+// =============================================================================
+// POST ROUTES - Perform Transfers
+// =============================================================================
+
 // POST /api/transfers/internal - Internal hospital transfer
 router.post('/internal', 
   authenticateJWT, 

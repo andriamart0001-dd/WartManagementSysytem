@@ -45,8 +45,20 @@ const app = express();
 
 // Enable CORS — only allow requests from our React frontend's URL
 // CLIENT_ORIGIN is set in the .env file (e.g., http://localhost:5173)
+// We also allow the Vercel production frontend explicitly.
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN,
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      process.env.CLIENT_ORIGIN,
+      'https://ward-manage.vercel.app'
+    ];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
