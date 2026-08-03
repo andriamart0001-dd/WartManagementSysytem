@@ -25,8 +25,11 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import WardManagementPage from './pages/admin/WardManagementPage';
 import WardAdminDashboard from './pages/wardAdmin/WardAdminDashboard';
+import BedManagementPage from './pages/wardAdmin/BedManagementPage';
+import EquipmentManagementPage from './pages/wardAdmin/EquipmentManagementPage';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
+import PatientDetailPage from './pages/doctor/PatientDetailPage';
 
 // Helper component for Root Route ('/') redirection based on auth status
 const RootRedirect = () => {
@@ -87,12 +90,28 @@ function App() {
                   }
                 />
 
-                {/* 2. Ward Admin Role Dashboard */}
+                {/* 2. Ward Admin Role Dashboard & Pages */}
                 <Route
                   path="/ward-admin"
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
                       <WardAdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ward-admin/beds"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
+                      <BedManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ward-admin/equipment"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
+                      <EquipmentManagementPage />
                     </ProtectedRoute>
                   }
                 />
@@ -107,12 +126,20 @@ function App() {
                   }
                 />
 
-                {/* 4. Doctor Role Dashboard */}
+                {/* 4. Doctor Role Dashboard & Pages */}
                 <Route
                   path="/doctor"
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.DOCTOR]}>
                       <DoctorDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/doctor/patient/:id"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.DOCTOR]}>
+                      <PatientDetailPage />
                     </ProtectedRoute>
                   }
                 />

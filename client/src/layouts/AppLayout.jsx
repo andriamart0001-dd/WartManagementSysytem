@@ -145,36 +145,61 @@ const AppLayout = () => {
               )}
 
               {user?.role === ROLES.WARD_ADMIN && (
-                <NavLink
-                  to="/ward-admin"
-                  className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <span className="nav-icon">🛌</span>
-                  <span>Ward & Bed Management</span>
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/ward-admin"
+                    end
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📊</span>
+                    <span>Ward Overview</span>
+                  </NavLink>
+                  <NavLink
+                    to="/ward-admin/beds"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🛏️</span>
+                    <span>Manage Beds</span>
+                  </NavLink>
+                  <NavLink
+                    to="/ward-admin/equipment"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🪛</span>
+                    <span>Equipment Inventory</span>
+                  </NavLink>
+                </>
               )}
 
               {user?.role === ROLES.STAFF && (
-                <NavLink
-                  to="/staff"
-                  className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <span className="nav-icon">📋</span>
-                  <span>Patient Operations</span>
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/staff"
+                    end
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📋</span>
+                    <span>Patient Operations</span>
+                  </NavLink>
+                </>
               )}
 
               {user?.role === ROLES.DOCTOR && (
-                <NavLink
-                  to="/doctor"
-                  className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <span className="nav-icon">🩺</span>
-                  <span>Medical Overview</span>
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/doctor"
+                    end
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🩺</span>
+                    <span>My Patients</span>
+                  </NavLink>
+                </>
               )}
             </nav>
           </div>

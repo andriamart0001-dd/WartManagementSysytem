@@ -25,7 +25,7 @@ const db = require('../../config/db');
 const bcrypt = require('bcryptjs');
 
 // Import constants so we avoid magic strings
-const { USER_STATUS } = require('../../constants');
+const { USER_STATUS, ROLES } = require('../../constants');
 
 // =============================================================================
 // HELPER: sanitizeUser
