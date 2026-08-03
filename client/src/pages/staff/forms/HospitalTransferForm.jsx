@@ -36,10 +36,19 @@ const HospitalTransferForm = ({ isOpen, onClose, onSuccess, preselectedAdmission
           axiosInstance.get('/admissions'),
           axiosInstance.get('/transfers/hospitals')
         ]);
-        setAdmissions(admRes.data.admissions || admRes.data);
-        setHospitals(hospRes.data);
+        const admList = Array.isArray(admRes.data.admissions) 
+          ? admRes.data.admissions 
+          : (Array.isArray(admRes.data) ? admRes.data : []);
+        const hospList = Array.isArray(hospRes.data.hospitals) 
+          ? hospRes.data.hospitals 
+          : (Array.isArray(hospRes.data) ? hospRes.data : []);
+
+        setAdmissions(admList);
+        setHospitals(hospList);
       } catch (err) {
         console.error('Failed to load initial data', err);
+        setAdmissions([]);
+        setHospitals([]);
       }
     };
     if (isOpen) {
@@ -82,11 +91,11 @@ const HospitalTransferForm = ({ isOpen, onClose, onSuccess, preselectedAdmission
     }
   };
 
-  const patientOptions = admissions.map(a => ({ 
+  const patientOptions = (Array.isArray(admissions) ? admissions : []).map(a => ({ 
     value: a.id.toString(), 
     label: `${a.patientName} (Current: ${a.wardName}${a.bedNumber ? ` - Bed ${a.bedNumber}` : ''})` 
   }));
-  const hospitalOptions = hospitals.map(h => ({ value: h.id.toString(), label: h.name }));
+  const hospitalOptions = (Array.isArray(hospitals) ? hospitals : []).map(h => ({ value: h.id.toString(), label: h.hospitalName || h.name }));
 
   return (
     <SlideDrawer

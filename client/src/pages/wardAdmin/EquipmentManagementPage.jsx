@@ -52,11 +52,20 @@ const EquipmentManagementPage = () => {
         axiosInstance.get('/equipment'),
         axiosInstance.get('/wards')
       ]);
-      setEquipment(equipRes.data);
-      setWards(wardsRes.data);
+      const equipList = Array.isArray(equipRes.data.equipment) 
+        ? equipRes.data.equipment 
+        : (Array.isArray(equipRes.data) ? equipRes.data : []);
+      const wardList = Array.isArray(wardsRes.data.wards) 
+        ? wardsRes.data.wards 
+        : (Array.isArray(wardsRes.data) ? wardsRes.data : []);
+
+      setEquipment(equipList);
+      setWards(wardList);
     } catch (error) {
       console.error('Error fetching data:', error);
       addToast('Failed to load equipment data', 'error');
+      setEquipment([]);
+      setWards([]);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +76,7 @@ const EquipmentManagementPage = () => {
     // eslint-disable-next-line
   }, []);
 
-  const wardOptions = wards.map(w => ({ value: w.id.toString(), label: w.name }));
+  const wardOptions = (Array.isArray(wards) ? wards : []).map(w => ({ value: w.id.toString(), label: w.wardName || w.name }));
 
   // ===========================================================================
   // DRAWER & FORM HANDLING

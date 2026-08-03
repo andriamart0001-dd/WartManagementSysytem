@@ -38,7 +38,7 @@ const StatCard = ({ title, value, icon, type = 'default', breakdown = [] }) => {
         {value}
       </div>
 
-      {breakdown && breakdown.length > 0 && (
+      {Array.isArray(breakdown) && breakdown.length > 0 && (
         <div className="card-breakdown">
           {breakdown.map((item, index) => (
             <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

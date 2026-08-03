@@ -33,9 +33,13 @@ const LogVitalsForm = ({ isOpen, onClose, onSuccess, preselectedAdmissionId = ''
     const fetchAdmissions = async () => {
       try {
         const res = await axiosInstance.get('/admissions');
-        setAdmissions(res.data.admissions || res.data);
+        const list = Array.isArray(res.data.admissions) 
+          ? res.data.admissions 
+          : (Array.isArray(res.data) ? res.data : []);
+        setAdmissions(list);
       } catch (err) {
         console.error('Failed to load admissions', err);
+        setAdmissions([]);
       }
     };
     if (isOpen) {
@@ -86,7 +90,7 @@ const LogVitalsForm = ({ isOpen, onClose, onSuccess, preselectedAdmissionId = ''
     }
   };
 
-  const patientOptions = admissions.map(a => ({ 
+  const patientOptions = (Array.isArray(admissions) ? admissions : []).map(a => ({ 
     value: a.id.toString(), 
     label: `${a.patientName} (Ward: ${a.wardName})` 
   }));

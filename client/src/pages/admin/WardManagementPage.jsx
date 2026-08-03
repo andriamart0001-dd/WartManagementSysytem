@@ -66,11 +66,20 @@ const WardManagementPage = () => {
         axiosInstance.get('/wards'),
         axiosInstance.get('/departments')
       ]);
-      setWards(wardsRes.data);
-      setDepartments(deptsRes.data);
+      const wardList = Array.isArray(wardsRes.data.wards) 
+        ? wardsRes.data.wards 
+        : (Array.isArray(wardsRes.data) ? wardsRes.data : []);
+      const deptList = Array.isArray(deptsRes.data.departments) 
+        ? deptsRes.data.departments 
+        : (Array.isArray(deptsRes.data) ? deptsRes.data : []);
+      
+      setWards(wardList);
+      setDepartments(deptList);
     } catch (error) {
       console.error('Error fetching data:', error);
       addToast('Failed to load wards and departments', 'error');
+      setWards([]);
+      setDepartments([]);
     } finally {
       setIsLoading(false);
     }
@@ -81,9 +90,9 @@ const WardManagementPage = () => {
   }, []);
 
   // Map departments to standard { value, label } options for the dropdown
-  const departmentOptions = departments.map((d) => ({
+  const departmentOptions = (Array.isArray(departments) ? departments : []).map((d) => ({
     value: d.id,
-    label: d.name
+    label: d.departmentName || d.name
   }));
 
   // ===========================================================================
@@ -185,8 +194,9 @@ const WardManagementPage = () => {
 
   // Helper to find department name
   const getDeptName = (deptId) => {
-    const dept = departments.find(d => d.id === deptId);
-    return dept ? dept.name : 'Unknown';
+    const deptList = Array.isArray(departments) ? departments : [];
+    const dept = deptList.find(d => d.id === deptId || d.id === parseInt(deptId));
+    return dept ? (dept.departmentName || dept.name) : 'Unknown';
   };
 
   return (
@@ -201,7 +211,7 @@ const WardManagementPage = () => {
 
       <DataTable 
         columns={['Ward Name', 'Type', 'Department', 'Threshold', 'Status', 'Actions']} 
-        isEmpty={!isLoading && wards.length === 0}
+        isEmpty={!isLoading && (!Array.isArray(wards) || wards.length === 0)}
         emptyMessage="No wards found."
       >
         {isLoading ? (
@@ -209,10 +219,10 @@ const WardManagementPage = () => {
             <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Loading wards...</td>
           </tr>
         ) : (
-          wards.map((w) => (
+          (Array.isArray(wards) ? wards : []).map((w) => (
             <tr key={w.id}>
-              <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{w.name}</td>
-              <td>{w.type}</td>
+              <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{w.wardName || w.name}</td>
+              <td>{w.wardType || w.type}</td>
               <td>{getDeptName(w.departmentId)}</td>
               <td>{w.minBedThreshold} beds</td>
               <td>

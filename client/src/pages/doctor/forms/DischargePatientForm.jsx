@@ -36,11 +36,13 @@ const DischargePatientForm = ({ isOpen, onClose, onSuccess, preselectedAdmission
     const fetchAdmissions = async () => {
       try {
         const res = await axiosInstance.get('/admissions');
-        // Handle both response shapes: { admissions: [] } or just []
-        const admissionList = res.data.admissions || res.data;
+        const admissionList = Array.isArray(res.data.admissions) 
+          ? res.data.admissions 
+          : (Array.isArray(res.data) ? res.data : []);
         setAdmissions(admissionList);
       } catch (err) {
         console.error('Failed to load admissions for discharge', err);
+        setAdmissions([]);
       }
     };
 
@@ -92,12 +94,13 @@ const DischargePatientForm = ({ isOpen, onClose, onSuccess, preselectedAdmission
   };
 
   // Get the name of the currently selected patient (for confirm modal message)
-  const selectedPatientName = admissions.find(
+  const admissionsList = Array.isArray(admissions) ? admissions : [];
+  const selectedPatientName = admissionsList.find(
     a => a.id.toString() === formData.admissionId
   )?.patientName || 'this patient';
 
   // Map admissions to { value, label } for the FormField select
-  const patientOptions = admissions.map(a => ({
+  const patientOptions = admissionsList.map(a => ({
     value: a.id.toString(),
     label: `${a.patientName} — Ward: ${a.wardName}${a.bedNumber ? ` (Bed ${a.bedNumber})` : ''}`
   }));
