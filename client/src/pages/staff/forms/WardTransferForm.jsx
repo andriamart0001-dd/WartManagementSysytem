@@ -38,10 +38,19 @@ const WardTransferForm = ({ isOpen, onClose, onSuccess, preselectedAdmissionId =
           axiosInstance.get('/admissions'),
           axiosInstance.get('/wards')
         ]);
-        setAdmissions(admRes.data.admissions || admRes.data);
-        setWards(wardsRes.data);
+        const admList = Array.isArray(admRes.data.admissions) 
+          ? admRes.data.admissions 
+          : (Array.isArray(admRes.data) ? admRes.data : []);
+        const wardList = Array.isArray(wardsRes.data.wards) 
+          ? wardsRes.data.wards 
+          : (Array.isArray(wardsRes.data) ? wardsRes.data : []);
+
+        setAdmissions(admList);
+        setWards(wardList);
       } catch (err) {
         console.error('Failed to load initial data', err);
+        setAdmissions([]);
+        setWards([]);
       }
     };
     if (isOpen) {
@@ -59,7 +68,10 @@ const WardTransferForm = ({ isOpen, onClose, onSuccess, preselectedAdmissionId =
       }
       try {
         const res = await axiosInstance.get(`/beds?wardId=${formData.toWardId}`);
-        const availableBeds = res.data.filter(b => b.status === 'available');
+        const rawBeds = Array.isArray(res.data.beds) 
+          ? res.data.beds 
+          : (Array.isArray(res.data) ? res.data : []);
+        const availableBeds = rawBeds.filter(b => b.bedStatus === 'available' || b.status === 'available');
         setBeds(availableBeds);
         
         if (availableBeds.length > 0) {
@@ -69,6 +81,7 @@ const WardTransferForm = ({ isOpen, onClose, onSuccess, preselectedAdmissionId =
         }
       } catch (err) {
         console.error('Failed to load beds', err);
+        setBeds([]);
       }
     };
     if (isOpen && formData.toWardId) fetchBeds();
@@ -109,12 +122,12 @@ const WardTransferForm = ({ isOpen, onClose, onSuccess, preselectedAdmissionId =
     }
   };
 
-  const patientOptions = admissions.map(a => ({ 
+  const patientOptions = (Array.isArray(admissions) ? admissions : []).map(a => ({ 
     value: a.id.toString(), 
     label: `${a.patientName} (Current: ${a.wardName}${a.bedNumber ? ` - Bed ${a.bedNumber}` : ''})` 
   }));
-  const wardOptions = wards.map(w => ({ value: w.id.toString(), label: w.name }));
-  const bedOptions = beds.map(b => ({ value: b.id.toString(), label: `Bed ${b.bedNumber}` }));
+  const wardOptions = (Array.isArray(wards) ? wards : []).map(w => ({ value: w.id.toString(), label: w.wardName || w.name }));
+  const bedOptions = (Array.isArray(beds) ? beds : []).map(b => ({ value: b.id.toString(), label: `Bed ${b.bedNumber}` }));
 
   return (
     <SlideDrawer

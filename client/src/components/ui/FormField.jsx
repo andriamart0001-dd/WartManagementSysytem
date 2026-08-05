@@ -50,7 +50,7 @@ const FormField = ({
           disabled={disabled}
         >
           <option value="" disabled>Select an option...</option>
-          {options.map((opt) => (
+          {(Array.isArray(options) ? options : []).map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>

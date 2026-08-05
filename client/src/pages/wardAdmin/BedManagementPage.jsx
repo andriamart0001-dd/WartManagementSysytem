@@ -42,16 +42,25 @@ const BedManagementPage = () => {
         axiosInstance.get('/beds'),
         axiosInstance.get('/wards')
       ]);
-      setBeds(bedsRes.data);
-      setWards(wardsRes.data);
+      const bedList = Array.isArray(bedsRes.data.beds) 
+        ? bedsRes.data.beds 
+        : (Array.isArray(bedsRes.data) ? bedsRes.data : []);
+      const wardList = Array.isArray(wardsRes.data.wards) 
+        ? wardsRes.data.wards 
+        : (Array.isArray(wardsRes.data) ? wardsRes.data : []);
+
+      setBeds(bedList);
+      setWards(wardList);
       
       // Select first ward by default if available
-      if (wardsRes.data.length > 0 && !selectedWardId) {
-        setSelectedWardId(wardsRes.data[0].id.toString());
+      if (wardList.length > 0 && !selectedWardId) {
+        setSelectedWardId(wardList[0].id.toString());
       }
     } catch (error) {
       console.error('Error fetching data:', error);
       addToast('Failed to load beds and wards', 'error');
+      setBeds([]);
+      setWards([]);
     } finally {
       setIsLoading(false);
     }
@@ -62,12 +71,15 @@ const BedManagementPage = () => {
     // eslint-disable-next-line
   }, []);
 
+  const bedsArray = Array.isArray(beds) ? beds : [];
+  const wardsArray = Array.isArray(wards) ? wards : [];
+
   // Filter beds based on selected ward
   const filteredBeds = selectedWardId 
-    ? beds.filter(b => b.wardId.toString() === selectedWardId)
-    : beds;
+    ? bedsArray.filter(b => b.wardId && b.wardId.toString() === selectedWardId)
+    : bedsArray;
 
-  const wardOptions = wards.map(w => ({ value: w.id.toString(), label: w.name }));
+  const wardOptions = wardsArray.map(w => ({ value: w.id.toString(), label: w.wardName || w.name }));
 
   // ===========================================================================
   // DRAWER & FORM HANDLING (Add Bed)

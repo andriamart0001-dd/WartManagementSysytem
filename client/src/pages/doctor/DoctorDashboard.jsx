@@ -45,11 +45,14 @@ const DoctorDashboard = () => {
     setIsLoading(true);
     try {
       const res = await axiosInstance.get('/admissions');
-      // The backend returns either { admissions: [...] } or just an array
-      setAdmissions(res.data.admissions || res.data);
+      const list = Array.isArray(res.data.admissions) 
+        ? res.data.admissions 
+        : (Array.isArray(res.data) ? res.data : []);
+      setAdmissions(list);
     } catch (error) {
       console.error('Error fetching admitted patients:', error);
       addToast('Failed to load patient list', 'error');
+      setAdmissions([]);
     } finally {
       setIsLoading(false);
     }
@@ -112,7 +115,7 @@ const DoctorDashboard = () => {
             </td>
           </tr>
         ) : (
-          admissions.map((adm) => (
+          (Array.isArray(admissions) ? admissions : []).map((adm) => (
             <tr key={adm.id}>
               <td className="mono-data">#{adm.id}</td>
               <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>

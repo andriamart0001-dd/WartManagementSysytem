@@ -41,10 +41,14 @@ const StaffDashboard = () => {
     setIsLoading(true);
     try {
       const res = await axiosInstance.get('/admissions?status=admitted');
-      setAdmissions(res.data.admissions || res.data);
+      const list = Array.isArray(res.data.admissions) 
+        ? res.data.admissions 
+        : (Array.isArray(res.data) ? res.data : []);
+      setAdmissions(list);
     } catch (error) {
       console.error('Error fetching admissions:', error);
       addToast('Failed to load active patients', 'error');
+      setAdmissions([]);
     } finally {
       setIsLoading(false);
     }
@@ -126,7 +130,7 @@ const StaffDashboard = () => {
             <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Loading patients...</td>
           </tr>
         ) : (
-          admissions.map((adm) => (
+          (Array.isArray(admissions) ? admissions : []).map((adm) => (
             <tr key={adm.id}>
               <td className="mono-data">#{adm.id}</td>
               <td style={{ fontWeight: 600 }}>{adm.patientName}</td>

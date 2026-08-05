@@ -43,8 +43,7 @@ const PatientDetailPage = () => {
     setIsLoadingAdmission(true);
     try {
       const res = await axiosInstance.get(`/admissions/${id}`);
-      // The backend returns { admission: {...} }
-      setAdmission(res.data.admission);
+      setAdmission(res.data.admission || res.data);
     } catch (error) {
       console.error('Error fetching admission record:', error);
       addToast('Failed to load patient record', 'error');
@@ -58,11 +57,14 @@ const PatientDetailPage = () => {
     setIsLoadingVitals(true);
     try {
       const res = await axiosInstance.get(`/admissions/${id}/vitals`);
-      // The backend returns { vitals: [...] }
-      setVitals(res.data.vitals || []);
+      const vitalsList = Array.isArray(res.data.vitals) 
+        ? res.data.vitals 
+        : (Array.isArray(res.data) ? res.data : []);
+      setVitals(vitalsList);
     } catch (error) {
       console.error('Error fetching vitals:', error);
       addToast('Failed to load vitals history', 'error');
+      setVitals([]);
     } finally {
       setIsLoadingVitals(false);
     }
@@ -199,7 +201,7 @@ const PatientDetailPage = () => {
             <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>Loading vitals...</td>
           </tr>
         ) : (
-          vitals.map((v) => (
+          (Array.isArray(vitals) ? vitals : []).map((v) => (
             <tr key={v.id}>
               <td>{formatDate(v.recordedAt)}</td>
               <td>{v.bloodPressure || '—'}</td>

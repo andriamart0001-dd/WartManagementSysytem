@@ -38,9 +38,13 @@ const AdmitPatientForm = ({ isOpen, onClose, onSuccess }) => {
     const fetchWards = async () => {
       try {
         const res = await axiosInstance.get('/wards');
-        setWards(res.data);
+        const list = Array.isArray(res.data.wards) 
+          ? res.data.wards 
+          : (Array.isArray(res.data) ? res.data : []);
+        setWards(list);
       } catch (err) {
         console.error('Failed to load wards', err);
+        setWards([]);
       }
     };
     if (isOpen) fetchWards();
@@ -55,8 +59,11 @@ const AdmitPatientForm = ({ isOpen, onClose, onSuccess }) => {
       }
       try {
         const res = await axiosInstance.get(`/beds?wardId=${formData.wardId}`);
+        const rawBeds = Array.isArray(res.data.beds) 
+          ? res.data.beds 
+          : (Array.isArray(res.data) ? res.data : []);
         // Only show available beds
-        const availableBeds = res.data.filter(b => b.status === 'available');
+        const availableBeds = rawBeds.filter(b => b.bedStatus === 'available' || b.status === 'available');
         setBeds(availableBeds);
         
         // Auto-select first available bed if none selected
@@ -67,9 +74,11 @@ const AdmitPatientForm = ({ isOpen, onClose, onSuccess }) => {
         }
       } catch (err) {
         console.error('Failed to load beds', err);
+        setBeds([]);
       }
     };
-    if (isOpen && formData.wardId) fetchBeds();
+
+    if (isOpen) fetchBeds();
   }, [formData.wardId, isOpen]);
 
   const handleChange = (e) => {
@@ -77,9 +86,10 @@ const AdmitPatientForm = ({ isOpen, onClose, onSuccess }) => {
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleSubmit = async () => {
-    if (!formData.patientName || !formData.age || !formData.gender || !formData.wardId) {
-      setError('Please fill in all required fields.');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.patientName || !formData.age || !formData.gender || !formData.wardId || !formData.bedId) {
+      setError('Please fill in all required fields');
       return;
     }
 
@@ -87,32 +97,31 @@ const AdmitPatientForm = ({ isOpen, onClose, onSuccess }) => {
     setError('');
 
     try {
-      const payload = {
-        ...formData,
-        age: parseInt(formData.age, 10),
-        wardId: parseInt(formData.wardId, 10),
-        bedId: formData.bedId ? parseInt(formData.bedId, 10) : null
-      };
-
-      const res = await axiosInstance.post('/admissions', payload);
-      onSuccess(res.data.admission); // Pass admission data back so parent can show QR modal
-      
-      // Reset form
-      setFormData({
-        patientName: '', age: '', gender: 'Male', contactNumber: '',
-        emergencyContactName: '', emergencyContactNumber: '', address: '',
-        wardId: '', bedId: ''
+      await axiosInstance.post('/admissions', {
+        patientName: formData.patientName,
+        age: parseInt(formData.age),
+        gender: formData.gender,
+        contactNumber: formData.contactNumber,
+        address: formData.address,
+        emergencyContactName: formData.emergencyContactName,
+        emergencyContactNumber: formData.emergencyContactNumber,
+        wardId: parseInt(formData.wardId),
+        bedId: parseInt(formData.bedId)
       });
+
+      addToast('Patient admitted successfully', 'success');
+      onSuccess();
+      onClose();
     } catch (err) {
-      console.error(err);
+      console.error('Admit error', err);
       setError(err.response?.data?.message || 'Failed to admit patient');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const wardOptions = wards.map(w => ({ value: w.id.toString(), label: w.name }));
-  const bedOptions = beds.map(b => ({ value: b.id.toString(), label: `Bed ${b.bedNumber}` }));
+  const wardOptions = (Array.isArray(wards) ? wards : []).map(w => ({ value: w.id.toString(), label: w.wardName || w.name }));
+  const bedOptions = (Array.isArray(beds) ? beds : []).map(b => ({ value: b.id.toString(), label: `Bed ${b.bedNumber}` }));
 
   return (
     <SlideDrawer

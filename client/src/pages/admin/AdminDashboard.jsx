@@ -31,8 +31,28 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
-        const response = await axiosInstance.get('/dashboard/summary');
-        setStats(response.data);
+        const [summaryRes, usersRes, wardsRes] = await Promise.allSettled([
+          axiosInstance.get('/dashboard/summary'),
+          axiosInstance.get('/users'),
+          axiosInstance.get('/wards')
+        ]);
+
+        const summaryData = summaryRes.status === 'fulfilled' ? (summaryRes.value.data?.data || summaryRes.value.data) : {};
+        const usersList = usersRes.status === 'fulfilled' ? (usersRes.value.data?.users || usersRes.value.data) : [];
+        const wardsList = wardsRes.status === 'fulfilled' ? (wardsRes.value.data?.wards || wardsRes.value.data) : [];
+
+        const totalUsers = Array.isArray(usersList) ? usersList.length : (summaryData.totalUsers || 0);
+        const totalWards = Array.isArray(wardsList) ? wardsList.length : (summaryData.totalWards || 0);
+        const totalBeds = summaryData.bedStats?.total || summaryData.totalBeds || 0;
+        const wardShortageCount = Array.isArray(summaryData.shortages?.wards) ? summaryData.shortages.wards.length : 0;
+        const equipShortageCount = Array.isArray(summaryData.shortages?.equipment) ? summaryData.shortages.equipment.length : 0;
+
+        setStats({
+          totalUsers,
+          totalWards,
+          totalBeds,
+          activeAlerts: wardShortageCount + equipShortageCount || summaryData.activeAlerts || 0
+        });
       } catch (error) {
         console.error('Error fetching admin dashboard stats:', error);
         addToast('Failed to load dashboard statistics', 'error');

@@ -60,10 +60,14 @@ const UserManagementPage = () => {
     setIsLoading(true);
     try {
       const response = await axiosInstance.get('/users');
-      setUsers(response.data);
+      const userList = Array.isArray(response.data.users) 
+        ? response.data.users 
+        : (Array.isArray(response.data) ? response.data : []);
+      setUsers(userList);
     } catch (error) {
       console.error('Error fetching users:', error);
       addToast('Failed to load users', 'error');
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
@@ -195,7 +199,7 @@ const UserManagementPage = () => {
 
       <DataTable 
         columns={['Name', 'Email', 'Role', 'Status', 'Actions']} 
-        isEmpty={!isLoading && users.length === 0}
+        isEmpty={!isLoading && (!Array.isArray(users) || users.length === 0)}
         emptyMessage="No users found."
       >
         {isLoading ? (
@@ -203,24 +207,27 @@ const UserManagementPage = () => {
             <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>Loading users...</td>
           </tr>
         ) : (
-          users.map((u) => (
-            <tr key={u.id}>
-              <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{u.fullName}</td>
-              <td>{u.email}</td>
-              <td>{getRoleBadge(u.role)}</td>
-              <td>
-                <StatusBadge status={u.isActive ? 'Available' : 'Discharged'} />
-              </td>
-              <td>
-                <div className="table-actions">
-                  <button className="action-btn" title="Edit User" onClick={() => openEditDrawer(u)}>✏️</button>
-                  {u.isActive && (
-                    <button className="action-btn" title="Deactivate" onClick={() => initiateDeactivate(u)}>🚫</button>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))
+          (Array.isArray(users) ? users : []).map((u) => {
+            const isActive = u.status === 'active' || u.isActive === true;
+            return (
+              <tr key={u.id}>
+                <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{u.fullName}</td>
+                <td>{u.email}</td>
+                <td>{getRoleBadge(u.role)}</td>
+                <td>
+                  <StatusBadge status={isActive ? 'Available' : 'Discharged'} />
+                </td>
+                <td>
+                  <div className="table-actions">
+                    <button className="action-btn" title="Edit User" onClick={() => openEditDrawer(u)}>✏️</button>
+                    {isActive && (
+                      <button className="action-btn" title="Deactivate" onClick={() => initiateDeactivate(u)}>🚫</button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            );
+          })
         )}
       </DataTable>
 
