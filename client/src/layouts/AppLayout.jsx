@@ -185,6 +185,14 @@ const AppLayout = () => {
                     <span className="nav-icon">📋</span>
                     <span>Patient Operations</span>
                   </NavLink>
+                  <NavLink
+                    to="/staff/lookup"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🔍</span>
+                    <span>Patient Lookup</span>
+                  </NavLink>
                 </>
               )}
 

@@ -28,6 +28,7 @@ import WardAdminDashboard from './pages/wardAdmin/WardAdminDashboard';
 import BedManagementPage from './pages/wardAdmin/BedManagementPage';
 import EquipmentManagementPage from './pages/wardAdmin/EquipmentManagementPage';
 import StaffDashboard from './pages/staff/StaffDashboard';
+import PatientLookupPage from './pages/staff/PatientLookupPage';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import PatientDetailPage from './pages/doctor/PatientDetailPage';
 
@@ -122,6 +123,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
                       <StaffDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/staff/lookup"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                      <PatientLookupPage />
                     </ProtectedRoute>
                   }
                 />
