@@ -20,17 +20,36 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import UnauthorizedPage from './pages/auth/UnauthorizedPage';
 
-// Role-Based Dashboards
+// Role-Based Dashboards & Pages
+// 1. Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import WardManagementPage from './pages/admin/WardManagementPage';
+import AddUserPage from './pages/admin/forms/AddUserPage';
+import EditUserPage from './pages/admin/forms/EditUserPage';
+import AddWardPage from './pages/admin/forms/AddWardPage';
+import EditWardPage from './pages/admin/forms/EditWardPage';
+
+// 2. Ward Admin
 import WardAdminDashboard from './pages/wardAdmin/WardAdminDashboard';
 import BedManagementPage from './pages/wardAdmin/BedManagementPage';
 import EquipmentManagementPage from './pages/wardAdmin/EquipmentManagementPage';
+import AddBedPage from './pages/wardAdmin/forms/AddBedPage';
+import AddEquipmentPage from './pages/wardAdmin/forms/AddEquipmentPage';
+import EditEquipmentPage from './pages/wardAdmin/forms/EditEquipmentPage';
+
+// 3. Staff
 import StaffDashboard from './pages/staff/StaffDashboard';
 import PatientLookupPage from './pages/staff/PatientLookupPage';
+import AdmitPatientPage from './pages/staff/AdmitPatientPage';
+import InternalTransferPage from './pages/staff/InternalTransferPage';
+import ExternalTransferPage from './pages/staff/ExternalTransferPage';
+import LogVitalsPage from './pages/staff/LogVitalsPage';
+
+// 4. Doctor
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import PatientDetailPage from './pages/doctor/PatientDetailPage';
+import DischargePage from './pages/doctor/DischargePage';
 
 // Helper component for Root Route ('/') redirection based on auth status
 const RootRedirect = () => {
@@ -83,10 +102,42 @@ function App() {
                   }
                 />
                 <Route
+                  path="/admin/users/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <AddUserPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/users/:id/edit"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <EditUserPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/admin/wards"
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
                       <WardManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/wards/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <AddWardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/wards/:id/edit"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <EditWardPage />
                     </ProtectedRoute>
                   }
                 />
@@ -109,6 +160,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/ward-admin/beds/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
+                      <AddBedPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/ward-admin/equipment"
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
@@ -116,8 +175,24 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="/ward-admin/equipment/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
+                      <AddEquipmentPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ward-admin/equipment/:id/edit"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
+                      <EditEquipmentPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-                {/* 3. Staff Role Dashboard */}
+                {/* 3. Staff Role Dashboard & Pages */}
                 <Route
                   path="/staff"
                   element={
@@ -131,6 +206,38 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
                       <PatientLookupPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/staff/admit"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                      <AdmitPatientPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/staff/transfers/internal/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                      <InternalTransferPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/staff/transfers/external/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                      <ExternalTransferPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/staff/vitals/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                      <LogVitalsPage />
                     </ProtectedRoute>
                   }
                 />
@@ -149,6 +256,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.DOCTOR]}>
                       <PatientDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/doctor/discharge/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.DOCTOR]}>
+                      <DischargePage />
                     </ProtectedRoute>
                   }
                 />

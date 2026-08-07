@@ -21,9 +21,9 @@ import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import QRPrintModal from '../../components/ui/QRPrintModal';
 
-// Drawer Forms for quick actions
-import LogVitalsForm from './forms/LogVitalsForm';
-import WardTransferForm from './forms/WardTransferForm';
+// Drawer Forms for quick actions (Temporarily commented out as user created full route pages)
+// import LogVitalsForm from './forms/LogVitalsForm';
+// import WardTransferForm from './forms/WardTransferForm';
 
 const PatientLookupPage = () => {
   const { addToast } = useToast();
@@ -275,7 +275,7 @@ const PatientLookupPage = () => {
         ))}
       </DataTable>
 
-      {/* SLIDE DRAWERS FOR ACTIONS */}
+      {/* SLIDE DRAWERS FOR ACTIONS (Commented out as user converted these to standalone pages)
       <LogVitalsForm 
         isOpen={activeForm === 'VITALS'} 
         onClose={closeForm} 
@@ -288,7 +288,7 @@ const PatientLookupPage = () => {
         onClose={closeForm} 
         onSuccess={() => handleFormSuccess('Internal transfer complete')}
         preselectedAdmissionId={selectedAdmissionId}
-      />
+      /> */}
 
       {/* QR PRINT MODAL */}
       {qrModalData && (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { useToast } from '../../context/ToastContext';
 
@@ -13,31 +14,26 @@ import FormField from '../../components/ui/FormField';
 // EquipmentManagementPage.jsx
 // =============================================================================
 // Purpose:
-//   Ward Admin interface to list equipment, register new, update quantities, 
-//   and log maintenance events.
-//   Integrates with GET /equipment, POST /equipment, PUT /equipment/:id, POST /equipment/:id/maintenance
+//   Ward Admin interface to list equipment, and log maintenance events.
+//   Integrates with GET /equipment, POST /equipment/:id/maintenance
 // =============================================================================
 
 const EquipmentManagementPage = () => {
   const { addToast } = useToast();
+  const navigate = useNavigate();
 
   // Data state
   const [equipment, setEquipment] = useState([]);
   const [wards, setWards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Drawer states
+  // Drawer states (Only for Maintenance now)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState(null);
-  const [drawerMode, setDrawerMode] = useState('ADD'); // ADD, EDIT, MAINTENANCE
   
   // Form input state
   const [formData, setFormData] = useState({
-    name: '',
-    wardId: '',
-    availableQuantity: 1,
-    minQuantityThreshold: 1,
-    maintenanceNotes: '' // Only used for maintenance mode
+    maintenanceNotes: ''
   });
   const [formIsSubmitting, setFormIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
@@ -76,47 +72,12 @@ const EquipmentManagementPage = () => {
     // eslint-disable-next-line
   }, []);
 
-  const wardOptions = (Array.isArray(wards) ? wards : []).map(w => ({ value: w.id.toString(), label: w.wardName || w.name }));
-
   // ===========================================================================
-  // DRAWER & FORM HANDLING
+  // MAINTENANCE FORM HANDLING
   // ===========================================================================
-  const openAddDrawer = () => {
-    setDrawerMode('ADD');
-    setEditingEquipment(null);
-    setFormData({ 
-      name: '', 
-      wardId: wards.length > 0 ? wards[0].id.toString() : '', 
-      availableQuantity: 1,
-      minQuantityThreshold: 1,
-      maintenanceNotes: ''
-    });
-    setFormError('');
-    setIsDrawerOpen(true);
-  };
-
-  const openEditDrawer = (equip) => {
-    setDrawerMode('EDIT');
-    setEditingEquipment(equip);
-    setFormData({ 
-      name: equip.name, 
-      wardId: equip.wardId.toString(), 
-      availableQuantity: equip.availableQuantity,
-      minQuantityThreshold: equip.minQuantityThreshold,
-      maintenanceNotes: ''
-    });
-    setFormError('');
-    setIsDrawerOpen(true);
-  };
-
   const openMaintenanceDrawer = (equip) => {
-    setDrawerMode('MAINTENANCE');
     setEditingEquipment(equip);
     setFormData({
-      name: equip.name,
-      wardId: equip.wardId.toString(),
-      availableQuantity: equip.availableQuantity,
-      minQuantityThreshold: equip.minQuantityThreshold,
       maintenanceNotes: ''
     });
     setFormError('');
@@ -131,11 +92,7 @@ const EquipmentManagementPage = () => {
   };
 
   const handleFormSubmit = async () => {
-    if (drawerMode !== 'MAINTENANCE' && (!formData.name.trim() || !formData.wardId)) {
-      setFormError('Name and Ward are required.');
-      return;
-    }
-    if (drawerMode === 'MAINTENANCE' && !formData.maintenanceNotes.trim()) {
+    if (!formData.maintenanceNotes.trim()) {
       setFormError('Maintenance notes are required.');
       return;
     }
@@ -144,35 +101,16 @@ const EquipmentManagementPage = () => {
     setFormError('');
 
     try {
-      if (drawerMode === 'MAINTENANCE') {
-        await axiosInstance.post(`/equipment/${editingEquipment.id}/maintenance`, {
-          notes: formData.maintenanceNotes
-        });
-        addToast('Maintenance logged successfully', 'success');
-      } else if (drawerMode === 'EDIT') {
-        const payload = {
-          name: formData.name,
-          availableQuantity: parseInt(formData.availableQuantity, 10),
-          minQuantityThreshold: parseInt(formData.minQuantityThreshold, 10)
-        };
-        await axiosInstance.put(`/equipment/${editingEquipment.id}`, payload);
-        addToast('Equipment updated successfully', 'success');
-      } else {
-        const payload = {
-          name: formData.name,
-          wardId: parseInt(formData.wardId, 10),
-          availableQuantity: parseInt(formData.availableQuantity, 10),
-          minQuantityThreshold: parseInt(formData.minQuantityThreshold, 10)
-        };
-        await axiosInstance.post('/equipment', payload);
-        addToast('Equipment created successfully', 'success');
-      }
+      await axiosInstance.post(`/equipment/${editingEquipment.id}/maintenance`, {
+        notes: formData.maintenanceNotes
+      });
+      addToast('Maintenance logged successfully', 'success');
       
       closeDrawer();
       fetchData(); // Refresh list
     } catch (error) {
       console.error('Save error:', error);
-      setFormError(error.response?.data?.message || 'Failed to process request.');
+      setFormError(error.response?.data?.message || 'Failed to log maintenance.');
     } finally {
       setFormIsSubmitting(false);
     }
@@ -183,7 +121,7 @@ const EquipmentManagementPage = () => {
   // ===========================================================================
   const getDeptName = (wardId) => {
     const ward = wards.find(w => w.id.toString() === wardId.toString());
-    return ward ? ward.name : 'Unknown';
+    return ward ? (ward.wardName || ward.name) : 'Unknown';
   };
 
   const determineStatus = (available, min) => {
@@ -198,7 +136,7 @@ const EquipmentManagementPage = () => {
         subtitle="Manage hospital medical equipment inventory and maintenance."
         icon="🪛"
         actionLabel="+ Register Equipment"
-        onAction={openAddDrawer}
+        onAction={() => navigate('/ward-admin/equipment/new')}
       />
 
       <DataTable 
@@ -226,7 +164,7 @@ const EquipmentManagementPage = () => {
               </td>
               <td>
                 <div className="table-actions">
-                  <button className="action-btn" title="Edit Inventory" onClick={() => openEditDrawer(eq)}>✏️ Update</button>
+                  <button className="action-btn" title="Edit Inventory" onClick={() => navigate(`/ward-admin/equipment/${eq.id}/edit`)}>✏️ Update</button>
                   <button className="action-btn" title="Log Maintenance" onClick={() => openMaintenanceDrawer(eq)}>🔧 Log</button>
                 </div>
               </td>
@@ -235,15 +173,11 @@ const EquipmentManagementPage = () => {
         )}
       </DataTable>
 
-      {/* Slide Drawer for Forms */}
+      {/* Slide Drawer for Maintenance Form */}
       <SlideDrawer
         isOpen={isDrawerOpen}
         onClose={closeDrawer}
-        title={
-          drawerMode === 'ADD' ? 'Register Equipment' : 
-          drawerMode === 'EDIT' ? 'Update Equipment' : 
-          'Log Maintenance Event'
-        }
+        title="Log Maintenance Event"
         footer={
           <>
             <button className="cancelBtn no-bg" onClick={closeDrawer} disabled={formIsSubmitting} style={{ padding: '10px 16px', cursor: 'pointer', border: '1px solid #cbd5e1', borderRadius: '8px' }}>Cancel</button>
@@ -259,74 +193,28 @@ const EquipmentManagementPage = () => {
           </div>
         )}
 
-        {drawerMode !== 'MAINTENANCE' && (
-          <>
-            <FormField 
-              id="name" 
-              label="Equipment Name" 
-              value={formData.name} 
-              onChange={handleFormChange} 
-              required 
-              disabled={formIsSubmitting || drawerMode === 'EDIT'} // Can't change name easily once registered
-            />
-            {drawerMode === 'ADD' && (
-              <FormField 
-                id="wardId" 
-                type="select" 
-                label="Assigned Ward" 
-                value={formData.wardId} 
-                onChange={handleFormChange} 
-                options={wardOptions}
-                required
-                disabled={formIsSubmitting}
-              />
-            )}
-            <FormField 
-              id="availableQuantity" 
-              type="number"
-              label="Available Quantity" 
-              value={formData.availableQuantity} 
-              onChange={handleFormChange} 
-              required 
-              disabled={formIsSubmitting}
-            />
-            <FormField 
-              id="minQuantityThreshold" 
-              type="number"
-              label="Minimum Safe Threshold" 
-              value={formData.minQuantityThreshold} 
-              onChange={handleFormChange} 
-              required 
-              disabled={formIsSubmitting}
-            />
-          </>
-        )}
-
-        {drawerMode === 'MAINTENANCE' && (
-          <>
-            <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <p style={{ margin: 0, fontSize: '14px', color: '#475569' }}>
-                Logging maintenance for: <strong style={{ color: '#0f172a' }}>{formData.name}</strong>
-              </p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>
-                This logs an event. To move items to maintenance status, update the quantities in the Edit drawer.
-              </p>
-            </div>
-            <FormField 
-              id="maintenanceNotes" 
-              type="textarea"
-              label="Maintenance Notes / Reason" 
-              value={formData.maintenanceNotes} 
-              onChange={handleFormChange} 
-              required 
-              disabled={formIsSubmitting}
-              placeholder="e.g. Sent for monthly calibration"
-            />
-          </>
-        )}
+        <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <p style={{ margin: 0, fontSize: '14px', color: '#475569' }}>
+            Logging maintenance for: <strong style={{ color: '#0f172a' }}>{editingEquipment?.name}</strong>
+          </p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>
+            This logs an event. To move items to maintenance status, update the quantities in the Edit page.
+          </p>
+        </div>
+        <FormField 
+          id="maintenanceNotes" 
+          type="textarea"
+          label="Maintenance Notes / Reason" 
+          value={formData.maintenanceNotes} 
+          onChange={handleFormChange} 
+          required 
+          disabled={formIsSubmitting}
+          placeholder="e.g. Sent for monthly calibration"
+        />
       </SlideDrawer>
     </div>
   );
 };
 
 export default EquipmentManagementPage;
+

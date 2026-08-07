@@ -9,10 +9,6 @@ import PageHeader from '../../components/ui/PageHeader';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 
-// Forms
-import LogVitalsForm from '../staff/forms/LogVitalsForm';
-import DischargePatientForm from './forms/DischargePatientForm';
-
 // =============================================================================
 // DoctorDashboard.jsx
 // =============================================================================
@@ -30,12 +26,6 @@ const DoctorDashboard = () => {
   // List of active admitted patients
   const [admissions, setAdmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Controls which form drawer is currently open
-  const [activeForm, setActiveForm] = useState(null); // 'VITALS' or 'DISCHARGE'
-
-  // The admission ID passed into a form when opened from a table row
-  const [selectedAdmissionId, setSelectedAdmissionId] = useState('');
 
   // ===========================================================================
   // DATA FETCHING
@@ -62,32 +52,6 @@ const DoctorDashboard = () => {
     fetchAdmissions();
     // eslint-disable-next-line
   }, []);
-
-  // ===========================================================================
-  // FORM OPEN / CLOSE HANDLERS
-  // ===========================================================================
-  const openForm = (formType, admissionId = '') => {
-    setSelectedAdmissionId(admissionId.toString());
-    setActiveForm(formType);
-  };
-
-  const closeForm = () => {
-    setActiveForm(null);
-    setSelectedAdmissionId('');
-  };
-
-  // Called after a vitals form succeeds
-  const handleVitalsSuccess = () => {
-    closeForm();
-    addToast('Vitals logged successfully', 'success');
-  };
-
-  // Called after discharge form succeeds — refresh the patient list
-  const handleDischargeSuccess = () => {
-    closeForm();
-    fetchAdmissions(); // Refresh to remove discharged patient from the list
-    addToast('Patient discharged successfully', 'success');
-  };
 
   // Navigate to the full patient detail page
   const viewPatientDetail = (admissionId) => {
@@ -144,7 +108,7 @@ const DoctorDashboard = () => {
                   <button
                     className="action-btn"
                     title="Log Vitals"
-                    onClick={() => openForm('VITALS', adm.id)}
+                    onClick={() => navigate(`/staff/vitals/new?admissionId=${adm.id}`)}
                   >
                     🩸 Vitals
                   </button>
@@ -153,7 +117,7 @@ const DoctorDashboard = () => {
                   <button
                     className="action-btn"
                     title="Discharge Patient"
-                    onClick={() => openForm('DISCHARGE', adm.id)}
+                    onClick={() => navigate(`/doctor/discharge/new?admissionId=${adm.id}`)}
                     style={{ color: 'var(--status-occupied)' }}
                   >
                     🏠 Discharge
@@ -164,24 +128,9 @@ const DoctorDashboard = () => {
           ))
         )}
       </DataTable>
-
-      {/* Log Vitals Drawer — shared with staff */}
-      <LogVitalsForm
-        isOpen={activeForm === 'VITALS'}
-        onClose={closeForm}
-        onSuccess={handleVitalsSuccess}
-        preselectedAdmissionId={selectedAdmissionId}
-      />
-
-      {/* Discharge Patient Drawer */}
-      <DischargePatientForm
-        isOpen={activeForm === 'DISCHARGE'}
-        onClose={closeForm}
-        onSuccess={handleDischargeSuccess}
-        preselectedAdmissionId={selectedAdmissionId}
-      />
     </div>
   );
 };
 
 export default DoctorDashboard;
+

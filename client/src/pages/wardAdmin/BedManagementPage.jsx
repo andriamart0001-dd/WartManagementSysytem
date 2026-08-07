@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { useToast } from '../../context/ToastContext';
 
@@ -6,7 +7,6 @@ import { useToast } from '../../context/ToastContext';
 import PageHeader from '../../components/ui/PageHeader';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
-import SlideDrawer from '../../components/ui/SlideDrawer';
 import FormField from '../../components/ui/FormField';
 
 // =============================================================================
@@ -14,23 +14,18 @@ import FormField from '../../components/ui/FormField';
 // =============================================================================
 // Purpose:
 //   Ward Admin interface to view bed grid, list beds, and mark them for maintenance.
-//   Integrates with GET /beds, POST /beds, PUT /beds/:id/status, GET /wards
+//   Integrates with GET /beds, PUT /beds/:id/status, GET /wards
 // =============================================================================
 
 const BedManagementPage = () => {
   const { addToast } = useToast();
+  const navigate = useNavigate();
 
   // Data state
   const [beds, setBeds] = useState([]);
   const [wards, setWards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWardId, setSelectedWardId] = useState('');
-
-  // Drawer (Form) state
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [formData, setFormData] = useState({ bedNumber: '', wardId: '' });
-  const [formIsSubmitting, setFormIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState('');
 
   // ===========================================================================
   // DATA FETCHING
@@ -82,52 +77,6 @@ const BedManagementPage = () => {
   const wardOptions = wardsArray.map(w => ({ value: w.id.toString(), label: w.wardName || w.name }));
 
   // ===========================================================================
-  // DRAWER & FORM HANDLING (Add Bed)
-  // ===========================================================================
-  const openAddDrawer = () => {
-    setFormData({ 
-      bedNumber: '', 
-      wardId: selectedWardId || (wards.length > 0 ? wards[0].id.toString() : '') 
-    });
-    setFormError('');
-    setIsDrawerOpen(true);
-  };
-
-  const closeDrawer = () => setIsDrawerOpen(false);
-
-  const handleFormChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-  };
-
-  const handleFormSubmit = async () => {
-    if (!formData.bedNumber.trim() || !formData.wardId) {
-      setFormError('Bed Number and Ward are required.');
-      return;
-    }
-
-    setFormIsSubmitting(true);
-    setFormError('');
-
-    try {
-      const payload = { 
-        bedNumber: formData.bedNumber, 
-        wardId: parseInt(formData.wardId, 10) 
-      };
-      await axiosInstance.post('/beds', payload);
-      addToast('Bed created successfully', 'success');
-      
-      closeDrawer();
-      fetchData(); // Refresh list
-    } catch (error) {
-      console.error('Save error:', error);
-      setFormError(error.response?.data?.message || 'Failed to save bed.');
-    } finally {
-      setFormIsSubmitting(false);
-    }
-  };
-
-  // ===========================================================================
   // BED STATUS HANDLING
   // ===========================================================================
   const handleStatusChange = async (bedId, newStatus) => {
@@ -156,7 +105,7 @@ const BedManagementPage = () => {
 
   const getDeptName = (wardId) => {
     const ward = wards.find(w => w.id.toString() === wardId.toString());
-    return ward ? ward.name : 'Unknown';
+    return ward ? (ward.wardName || ward.name) : 'Unknown';
   };
 
   return (
@@ -166,7 +115,7 @@ const BedManagementPage = () => {
         subtitle="Manage bed availability and maintenance schedules."
         icon="🛏️"
         actionLabel="+ Add New Bed"
-        onAction={openAddDrawer}
+        onAction={() => navigate('/ward-admin/beds/new')}
       />
 
       {/* Ward Filter */}
@@ -254,48 +203,9 @@ const BedManagementPage = () => {
           ))
         )}
       </DataTable>
-
-      {/* Add Form Drawer */}
-      <SlideDrawer
-        isOpen={isDrawerOpen}
-        onClose={closeDrawer}
-        title="Add New Bed"
-        footer={
-          <>
-            <button className="cancelBtn no-bg" onClick={closeDrawer} disabled={formIsSubmitting} style={{ padding: '10px 16px', cursor: 'pointer', border: '1px solid #cbd5e1', borderRadius: '8px' }}>Cancel</button>
-            <button className="submit-button" onClick={handleFormSubmit} disabled={formIsSubmitting} style={{ width: 'auto', marginTop: 0 }}>
-              {formIsSubmitting ? 'Saving...' : 'Save Bed'}
-            </button>
-          </>
-        }
-      >
-        {formError && (
-          <div className="alert alert-error" style={{ marginBottom: '16px' }}>
-            <span>⚠️</span> {formError}
-          </div>
-        )}
-
-        <FormField 
-          id="bedNumber" 
-          label="Bed Number / Identifier (e.g. A-12)" 
-          value={formData.bedNumber} 
-          onChange={handleFormChange} 
-          required 
-          disabled={formIsSubmitting}
-        />
-        <FormField 
-          id="wardId" 
-          type="select" 
-          label="Assigned Ward" 
-          value={formData.wardId} 
-          onChange={handleFormChange} 
-          options={wardOptions}
-          required
-          disabled={formIsSubmitting}
-        />
-      </SlideDrawer>
     </div>
   );
 };
 
 export default BedManagementPage;
+

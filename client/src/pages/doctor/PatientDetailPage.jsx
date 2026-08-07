@@ -7,8 +7,6 @@ import { useToast } from '../../context/ToastContext';
 import PageHeader from '../../components/ui/PageHeader';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
-import LogVitalsForm from '../staff/forms/LogVitalsForm';
-import DischargePatientForm from './forms/DischargePatientForm';
 
 // =============================================================================
 // PatientDetailPage.jsx
@@ -34,16 +32,18 @@ const PatientDetailPage = () => {
   const [isLoadingAdmission, setIsLoadingAdmission] = useState(true);
   const [isLoadingVitals, setIsLoadingVitals] = useState(true);
 
-  // Form drawer states
-  const [isVitalsFormOpen, setIsVitalsFormOpen] = useState(false);
-  const [isDischargeFormOpen, setIsDischargeFormOpen] = useState(false);
-
   // Fetch the main admission record by ID
   const fetchAdmission = async () => {
     setIsLoadingAdmission(true);
     try {
       const res = await axiosInstance.get(`/admissions/${id}`);
-      setAdmission(res.data.admission || res.data);
+      const fetchedAdmission = res.data.admission || res.data;
+      setAdmission(fetchedAdmission);
+      
+      // If admission doesn't exist, this handles the error gracefully
+      if (!fetchedAdmission) {
+        addToast('Patient record not found', 'error');
+      }
     } catch (error) {
       console.error('Error fetching admission record:', error);
       addToast('Failed to load patient record', 'error');
@@ -76,20 +76,6 @@ const PatientDetailPage = () => {
     fetchVitals();
     // eslint-disable-next-line
   }, [id]);
-
-  // Called when vitals form succeeds
-  const handleVitalsSuccess = () => {
-    setIsVitalsFormOpen(false);
-    fetchVitals(); // Refresh vitals table
-    addToast('Vitals logged successfully', 'success');
-  };
-
-  // Called when discharge form succeeds — send user back to dashboard
-  const handleDischargeSuccess = () => {
-    setIsDischargeFormOpen(false);
-    addToast('Patient discharged successfully', 'success');
-    navigate('/doctor'); // Go back to the doctor dashboard
-  };
 
   // Helper to format a date string into readable form
   const formatDate = (dateStr) => {
@@ -127,12 +113,12 @@ const PatientDetailPage = () => {
         subtitle={`Admission #${admission.id} — ${admission.wardName}${admission.bedNumber ? `, Bed ${admission.bedNumber}` : ''}`}
         icon="🩺"
         actionLabel={admission.status === 'admitted' ? '🏠 Discharge Patient' : null}
-        onAction={() => setIsDischargeFormOpen(true)}
+        onAction={() => navigate(`/doctor/discharge/new?admissionId=${id}`)}
       />
 
       {/* Back Button */}
       <button
-        onClick={() => navigate('/doctor')}
+        onClick={() => navigate(-1)}
         style={{
           background: 'none',
           border: 'none',
@@ -185,7 +171,7 @@ const PatientDetailPage = () => {
           <button
             className="action-btn"
             style={{ padding: '8px 14px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }}
-            onClick={() => setIsVitalsFormOpen(true)}
+            onClick={() => navigate(`/staff/vitals/new?admissionId=${id}`)}
           >
             + Log Vitals
           </button>
@@ -212,22 +198,6 @@ const PatientDetailPage = () => {
           ))
         )}
       </DataTable>
-
-      {/* Vitals Form Drawer */}
-      <LogVitalsForm
-        isOpen={isVitalsFormOpen}
-        onClose={() => setIsVitalsFormOpen(false)}
-        onSuccess={handleVitalsSuccess}
-        preselectedAdmissionId={id}
-      />
-
-      {/* Discharge Form Drawer */}
-      <DischargePatientForm
-        isOpen={isDischargeFormOpen}
-        onClose={() => setIsDischargeFormOpen(false)}
-        onSuccess={handleDischargeSuccess}
-        preselectedAdmissionId={id}
-      />
     </div>
   );
 };
