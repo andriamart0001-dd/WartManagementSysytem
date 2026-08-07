@@ -24,7 +24,7 @@ const AdmitPatientPage = () => {
   const [formData, setFormData] = useState({
     patientName: '',
     age: '',
-    gender: 'Male',
+    gender: 'male',
     contactNumber: '',
     emergencyContactName: '',
     emergencyContactNumber: '',
@@ -94,8 +94,9 @@ const AdmitPatientPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.patientName || !formData.age || !formData.gender || !formData.wardId || !formData.bedId) {
-      setError('Please fill in all required fields');
+    // bedId is optional — a patient can be admitted to a ward without a specific bed
+    if (!formData.patientName || !formData.age || !formData.gender || !formData.wardId) {
+      setError('Please fill in Patient Name, Age, Gender, and Ward');
       return;
     }
 
@@ -173,7 +174,7 @@ const AdmitPatientPage = () => {
               <FormField id="age" type="number" label="Age" value={formData.age} onChange={handleChange} required disabled={isSubmitting} />
             </div>
             <div style={{ flex: 1 }}>
-              <FormField id="gender" type="select" label="Gender" value={formData.gender} onChange={handleChange} options={[{value:'Male', label:'Male'}, {value:'Female', label:'Female'}, {value:'Other', label:'Other'}]} required disabled={isSubmitting} />
+              <FormField id="gender" type="select" label="Gender" value={formData.gender} onChange={handleChange} options={[{value:'male', label:'Male'}, {value:'female', label:'Female'}, {value:'other', label:'Other'}]} required disabled={isSubmitting} />
             </div>
           </div>
 
