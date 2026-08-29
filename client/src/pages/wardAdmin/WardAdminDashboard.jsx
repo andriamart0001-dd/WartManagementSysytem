@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 // Components
 import PageHeader from '../../components/ui/PageHeader';
 import StatCard from '../../components/ui/StatCard';
+import AlertBanner from '../../components/ui/AlertBanner';
 
 // =============================================================================
 // WardAdminDashboard.jsx
@@ -25,6 +26,7 @@ const WardAdminDashboard = () => {
     totalBeds: 0,
     activeAlerts: 0
   });
+  const [shortages, setShortages] = useState({ wards: [], equipment: [] });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -48,6 +50,13 @@ const WardAdminDashboard = () => {
           totalBeds,
           activeAlerts: wardShortageCount + equipShortageCount || summaryData.activeAlerts || 0
         });
+
+        if (summaryData.shortages) {
+          setShortages({
+            wards: Array.isArray(summaryData.shortages.wards) ? summaryData.shortages.wards : [],
+            equipment: Array.isArray(summaryData.shortages.equipment) ? summaryData.shortages.equipment : []
+          });
+        }
       } catch (error) {
         console.error('Error fetching ward admin dashboard stats:', error);
         addToast('Failed to load dashboard statistics', 'error');
@@ -66,6 +75,22 @@ const WardAdminDashboard = () => {
         subtitle={`Welcome back, ${user?.fullName}. Manage your ward's operations and equipment.`}
         icon="🛌"
       />
+
+      {/* Shortage Alerts */}
+      {!isLoading && shortages.wards.map(ward => (
+        <AlertBanner 
+          key={`ward-${ward.id}`} 
+          message={`Ward Shortage: ${ward.wardName} has only ${ward.availableBeds} available beds (Minimum threshold is ${ward.minBedThreshold}).`}
+          type="error"
+        />
+      ))}
+      {!isLoading && shortages.equipment.map(eq => (
+        <AlertBanner 
+          key={`eq-${eq.id}`} 
+          message={`Equipment Shortage: ${eq.wardName} has only ${eq.quantity} ${eq.equipmentName}(s) (Minimum threshold is ${eq.minQuantityThreshold}).`}
+          type="error"
+        />
+      ))}
 
       {/* KPI Cards Grid */}
       <div className="dashboard-cards-grid" style={{ marginBottom: '40px' }}>
