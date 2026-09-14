@@ -1,132 +1,38 @@
 // =============================================================================
-// authController.js — Handles Login Authentication
+// authController.js — HTTP Handler for Auth
 // =============================================================================
-// This controller contains the logic for the login endpoint.
-// It does the following steps:
-//   1. Receives the email and password from the request body.
-//   2. Looks up the user in the database by their email address.
-//   3. Uses bcrypt to safely compare the submitted password with the stored hash.
-//   4. If correct, generates a JWT (JSON Web Token) that the frontend will store
-//      and send with every future request to prove who they are.
+// This file ONLY handles HTTP: reads the request, calls the service, sends the response.
 // =============================================================================
 
-// Import the database connection pool
-const db = require('../../config/db');
+const authService = require('./authService');
 
-// Import bcryptjs for comparing hashed passwords
-const bcrypt = require('bcryptjs');
-
-// Import jsonwebtoken for creating the JWT after a successful login
-const jwt = require('jsonwebtoken');
-
-// Import the USER_STATUS constant so we do not use a "magic string" 'active'
-const { USER_STATUS } = require('../../constants');
-
-// -----------------------------------------------------------------------------
-// loginUser — POST /api/auth/login
-// -----------------------------------------------------------------------------
-// Accepts: { email, password } in the request body
-// Returns: { token } on success, or an error message on failure
-// -----------------------------------------------------------------------------
 const loginUser = async (req, res) => {
-  // Destructure the email and password from the incoming request body
   const { email, password } = req.body;
 
-  // --- Step 1: Basic Input Validation ---
-  // Make sure both email and password were actually sent in the request
   if (!email || !password) {
-    return res.status(400).json({
-      message: 'Please provide both email and password'
-    });
+    return res.status(400).json({ message: 'Please provide both email and password' });
   }
 
   try {
-    // --- Step 2: Look up the user in the database ---
-    // We search by email only — we will check the password separately with bcrypt
-    // Using parameterized query (?) to prevent SQL injection
-    const findUserSql = 'SELECT * FROM users WHERE email = ? LIMIT 1';
-    const [rows] = await db.query(findUserSql, [email]);
-
-    // If no user was found with that email, return a 401 Unauthorized error
-    // We use a vague message on purpose so attackers cannot tell if the email exists
-    if (rows.length === 0) {
-      return res.status(401).json({
-        message: 'Invalid email or password'
-      });
-    }
-
-    // The user was found — grab the first (and only) row
-    const userRecord = rows[0];
-
-    // --- Step 3: Check if the account is active ---
-    // We do not allow inactive (deactivated) accounts to log in
-    if (userRecord.status !== USER_STATUS.ACTIVE) {
-      return res.status(403).json({
-        message: 'Your account has been deactivated. Please contact an administrator.'
-      });
-    }
-
-    // --- Step 4: Compare the submitted password against the stored hash ---
-    // bcrypt.compare() safely checks the plaintext password against the hash
-    // It returns true if they match, false if they do not
-    const isPasswordCorrect = await bcrypt.compare(password, userRecord.passwordHash);
-
-    if (!isPasswordCorrect) {
-      return res.status(401).json({
-        message: 'Invalid email or password'
-      });
-    }
-
-    // --- Step 5: Build the JWT payload ---
-    // The payload is the data we embed inside the token.
-    // We only include non-sensitive information — never include the password hash!
-    const tokenPayload = {
-      id: userRecord.id,
-      role: userRecord.role,
-      fullName: userRecord.fullName
-    };
-
-    // --- Step 6: Sign and create the token ---
-    // jwt.sign() creates the token using:
-    //   - The payload (user data)
-    //   - A secret key from our .env file (JWT_SECRET) — this keeps it tamper-proof
-    //   - An expiration time from our .env file (JWT_EXPIRES_IN) e.g. "8h"
-    const token = jwt.sign(
-      tokenPayload,
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
-
-    // --- Step 7: Return the token to the client ---
-    // The frontend will store this token and send it in the Authorization header
-    // for all future protected requests
+    const authData = await authService.authenticateUser(email, password);
     return res.status(200).json({
       message: 'Login successful',
-      token: token,
-      requirePasswordChange: userRecord.isTemporaryPassword === 1,
-      user: {
-        id: userRecord.id,
-        fullName: userRecord.fullName,
-        email: userRecord.email,
-        role: userRecord.role
-      }
+      ...authData
     });
-
   } catch (error) {
-    // If anything unexpected goes wrong, log it on the server and send a
-    // generic 500 error to the client (never expose internal error details)
+    // If it's a known error from our service, return 401 or 403
+    if (error.message === 'Invalid email or password') {
+      return res.status(401).json({ message: error.message });
+    }
+    if (error.message.includes('deactivated')) {
+      return res.status(403).json({ message: error.message });
+    }
+    
     console.error('Login error:', error);
-    return res.status(500).json({
-      message: 'An internal server error occurred. Please try again later.'
-    });
+    return res.status(500).json({ message: 'An internal server error occurred. Please try again later.' });
   }
 };
 
-// -----------------------------------------------------------------------------
-// changePassword — POST /api/auth/change-password
-// -----------------------------------------------------------------------------
-// Used by users to change their temporary password to a permanent one.
-// -----------------------------------------------------------------------------
 const changePassword = async (req, res) => {
   const userId = req.user.id;
   const { currentPassword, newPassword } = req.body;
@@ -136,68 +42,36 @@ const changePassword = async (req, res) => {
   }
 
   try {
-    const [rows] = await db.query('SELECT passwordHash FROM users WHERE id = ? LIMIT 1', [userId]);
-    if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
-
-    const isMatch = await bcrypt.compare(currentPassword, rows[0].passwordHash);
-    if (!isMatch) return res.status(401).json({ message: 'Current password is incorrect' });
-
-    const saltRounds = 10;
-    const newHashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    await db.query(
-      'UPDATE users SET passwordHash = ?, isTemporaryPassword = false, updatedBy = ? WHERE id = ?',
-      [newHashedPassword, userId, userId]
-    );
-
+    await authService.changeUserPassword(userId, currentPassword, newPassword);
     return res.status(200).json({ message: 'Password changed successfully' });
   } catch (error) {
+    if (error.message === 'User not found') return res.status(404).json({ message: error.message });
+    if (error.message === 'Current password is incorrect') return res.status(401).json({ message: error.message });
+    
     console.error('Change password error:', error);
     return res.status(500).json({ message: 'Error changing password' });
   }
 };
 
-// -----------------------------------------------------------------------------
-// getMe — GET /api/auth/me
-// -----------------------------------------------------------------------------
-// Requires: authenticateJWT middleware (populates req.user)
-// Returns: Profile information of the currently authenticated staff user
-// -----------------------------------------------------------------------------
 const getMe = async (req, res) => {
   try {
-    // req.user.id is populated by authenticateJWT middleware
     const userId = req.user.id;
-
-    // Fetch user details from database, omitting passwordHash
-    const findUserSql = `
-      SELECT id, fullName, email, role, contactNumber, status, isTemporaryPassword, createdAt, updatedAt
-      FROM users
-      WHERE id = ? LIMIT 1
-    `;
-    const [rows] = await db.query(findUserSql, [userId]);
-
-    if (rows.length === 0) {
-      return res.status(404).json({
-        message: 'User profile not found'
-      });
-    }
-
+    const userProfile = await authService.getUserProfile(userId);
     return res.status(200).json({
       message: 'User profile retrieved successfully',
-      user: rows[0]
+      user: userProfile
     });
   } catch (error) {
+    if (error.message === 'User profile not found') {
+      return res.status(404).json({ message: error.message });
+    }
     console.error('Get me error:', error);
-    return res.status(500).json({
-      message: 'An internal server error occurred while retrieving user profile.'
-    });
+    return res.status(500).json({ message: 'An internal server error occurred while retrieving user profile.' });
   }
 };
 
-// Export the controller functions so the route file can use them
 module.exports = {
   loginUser,
   changePassword,
   getMe
 };
-
