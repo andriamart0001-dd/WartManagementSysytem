@@ -11,7 +11,7 @@ const express = require('express');
 const router = express.Router();
 
 // Import controller functions that handle auth endpoints
-const { loginUser, getMe } = require('./authController');
+const { loginUser, getMe, changePassword } = require('./authController');
 
 // Import authentication middleware
 const { authenticateJWT } = require('../../middleware/authMiddleware');
@@ -23,6 +23,14 @@ const { authenticateJWT } = require('../../middleware/authMiddleware');
 // The client sends { email, password } and receives a JWT token in return.
 // -----------------------------------------------------------------------------
 router.post('/login', loginUser);
+
+// -----------------------------------------------------------------------------
+// POST /api/auth/change-password
+// -----------------------------------------------------------------------------
+// Protected route — requires valid JWT token.
+// Allows user to change temporary password.
+// -----------------------------------------------------------------------------
+router.post('/change-password', authenticateJWT, changePassword);
 
 // -----------------------------------------------------------------------------
 // GET /api/auth/me

@@ -78,6 +78,7 @@ export const AuthProvider = ({ children }) => {
       // Extract token and user object from backend response
       const responseToken = response.data.token;
       const responseUser = response.data.user;
+      const requirePasswordChange = response.data.requirePasswordChange;
 
       // Save token and user into localStorage for persistence
       localStorage.setItem(STORAGE_KEYS.TOKEN, responseToken);
@@ -91,7 +92,8 @@ export const AuthProvider = ({ children }) => {
       // Return success object
       return {
         success: true,
-        user: responseUser
+        user: responseUser,
+        requirePasswordChange: requirePasswordChange
       };
 
     } catch (error) {
@@ -107,6 +109,22 @@ export const AuthProvider = ({ children }) => {
         success: false,
         message: errorMessage
       };
+    }
+  };
+
+  // ===========================================================================
+  // CHECK AUTH FUNCTION
+  // Re-fetches current user to update role/flags (like temporary password)
+  // ===========================================================================
+  const checkAuth = async () => {
+    try {
+      const response = await axiosInstance.get('/auth/me');
+      if (response.data.user) {
+        setUser(response.data.user);
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
+      }
+    } catch (err) {
+      console.error('Failed to re-fetch user:', err);
     }
   };
 
@@ -132,7 +150,8 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     isLoading,
     login,
-    logout
+    logout,
+    checkAuth
   };
 
   return (

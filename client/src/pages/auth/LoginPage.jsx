@@ -92,10 +92,16 @@ const LoginPage = () => {
       const result = await login(email.trim(), password);
 
       if (result.success) {
-        // Step 4: Navigate to the user's role-based dashboard
-        const userRole = result.user.role;
-        const dashboardPath = ROLE_DASHBOARDS[userRole] || '/admin';
-        navigate(dashboardPath, { replace: true });
+        // Step 4: Check if temporary password needs changing
+        if (result.requirePasswordChange) {
+          sessionStorage.setItem('force_password_change', 'true');
+          navigate('/force-password-change', { replace: true });
+        } else {
+          // Navigate to the user's role-based dashboard
+          const userRole = result.user.role;
+          const dashboardPath = ROLE_DASHBOARDS[userRole] || '/admin';
+          navigate(dashboardPath, { replace: true });
+        }
       } else {
         // Step 5: Display error message returned by backend
         setApiError(result.message);

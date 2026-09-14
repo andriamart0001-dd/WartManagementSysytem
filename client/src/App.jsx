@@ -19,6 +19,7 @@ import ProtectedRoute from './routes/ProtectedRoute';
 // Public Auth Pages
 import LoginPage from './pages/auth/LoginPage';
 import UnauthorizedPage from './pages/auth/UnauthorizedPage';
+import ForcePasswordChange from './pages/auth/ForcePasswordChange';
 
 // Role-Based Dashboards & Pages
 // 1. Admin
@@ -78,6 +79,14 @@ function App() {
             {/* Public Auth Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route 
+              path="/force-password-change" 
+              element={
+                <ProtectedRoute>
+                  <ForcePasswordChange />
+                </ProtectedRoute>
+              } 
+            />
 
             {/* Root Redirect */}
             <Route path="/" element={<RootRedirect />} />
@@ -214,7 +223,7 @@ function App() {
                 <Route
                   path="/staff"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
                       <StaffDashboard />
                     </ProtectedRoute>
                   }
@@ -222,7 +231,7 @@ function App() {
                 <Route
                   path="/staff/lookup"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
                       <PatientLookupPage />
                     </ProtectedRoute>
                   }
@@ -230,7 +239,7 @@ function App() {
                 <Route
                   path="/staff/admit"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
                       <AdmitPatientPage />
                     </ProtectedRoute>
                   }
@@ -238,7 +247,7 @@ function App() {
                 <Route
                   path="/staff/transfers/internal/new"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
                       <InternalTransferPage />
                     </ProtectedRoute>
                   }
@@ -246,7 +255,7 @@ function App() {
                 <Route
                   path="/staff/transfers/external/new"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
                       <ExternalTransferPage />
                     </ProtectedRoute>
                   }
@@ -254,7 +263,7 @@ function App() {
                 <Route
                   path="/staff/vitals/new"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
                       <LogVitalsPage />
                     </ProtectedRoute>
                   }

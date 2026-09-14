@@ -48,6 +48,13 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
     return <Navigate to="/login" replace />;
   }
 
+  // Step 2.5: If user has a temporary password, force them to change it
+  // Check the sessionStorage flag or the user object flag
+  const needsPasswordChange = sessionStorage.getItem('force_password_change') === 'true' || user.isTemporaryPassword;
+  if (needsPasswordChange && window.location.pathname !== '/force-password-change') {
+    return <Navigate to="/force-password-change" replace />;
+  }
+
   // Step 3: If allowedRoles is specified, check if logged-in user has permission
   if (allowedRoles.length > 0) {
     const hasRolePermission = allowedRoles.includes(user.role);

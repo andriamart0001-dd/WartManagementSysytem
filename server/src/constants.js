@@ -11,10 +11,11 @@
 // The four staff roles that exist in the system.
 // These match the ENUM values in the `users` table in the database.
 const ROLES = {
-  ADMIN: 'admin',         // Full system access — manages users, wards, departments
-  WARD_ADMIN: 'wardAdmin',// Manages a specific ward — beds, equipment, admissions
-  STAFF: 'staff',         // Can admit patients, log vitals, perform transfers
-  DOCTOR: 'doctor'        // Can view and discharge patients, log vitals
+  ADMIN: 'admin',                 // Full system access — manages users, wards, departments
+  WARD_ADMIN: 'wardAdmin',        // Manages a specific ward — beds, equipment, admissions
+  ADMISSION_DOCTOR: 'admissionDoctor', // Can admit patients
+  NURSE: 'nurse',                 // Manages beds, vitals, transfers, equipment
+  DOCTOR: 'doctor'                // Can view and discharge patients, log vitals
 };
 
 // User account status values from the `status` column in the `users` table

@@ -23,26 +23,37 @@ const EditUserPage = () => {
     fullName: '',
     email: '',
     password: '',
-    role: ROLES.STAFF
+    role: ROLES.NURSE,
+    assignedWardId: ''
   });
+  
+  const [wards, setWards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const roleOptions = [
     { value: ROLES.ADMIN, label: 'System Admin' },
-    { value: ROLES.WARD_ADMIN, label: 'Ward Admin' },
-    { value: ROLES.STAFF, label: 'Staff Nurse' },
-    { value: ROLES.DOCTOR, label: 'Medical Doctor' }
+    { value: ROLES.WARD_ADMIN, label: 'Ward Administrator' },
+    { value: ROLES.ADMISSION_DOCTOR, label: 'Admission Doctor' },
+    { value: ROLES.NURSE, label: 'Nurse' },
+    { value: ROLES.DOCTOR, label: 'Doctor' }
   ];
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axiosInstance.get('/users');
-        const userList = Array.isArray(response.data.users) 
-          ? response.data.users 
-          : (Array.isArray(response.data) ? response.data : []);
+        const [usersRes, wardsRes] = await Promise.all([
+          axiosInstance.get('/users'),
+          axiosInstance.get('/wards')
+        ]);
+        
+        const userList = Array.isArray(usersRes.data.users) 
+          ? usersRes.data.users 
+          : (Array.isArray(usersRes.data) ? usersRes.data : []);
+          
+        const wardList = Array.isArray(wardsRes.data.wards) ? wardsRes.data.wards : [];
+        setWards(wardList.map(w => ({ value: w.id, label: w.wardName })));
         
         const userToEdit = userList.find(u => u.id.toString() === id);
         
@@ -51,20 +62,21 @@ const EditUserPage = () => {
             fullName: userToEdit.fullName,
             email: userToEdit.email,
             password: '', // Blank by default, only update if typed
-            role: userToEdit.role
+            role: userToEdit.role,
+            assignedWardId: userToEdit.assignedWardId || ''
           });
         } else {
           setError('User not found.');
         }
       } catch (err) {
-        console.error('Error fetching user:', err);
+        console.error('Error fetching data:', err);
         setError('Failed to load user data.');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUser();
+    fetchData();
   }, [id]);
 
   const handleChange = (e) => {
@@ -79,6 +91,11 @@ const EditUserPage = () => {
       return;
     }
 
+    if ((formData.role === ROLES.NURSE || formData.role === ROLES.WARD_ADMIN) && !formData.assignedWardId) {
+      setError(`Assigning a Ward is mandatory for the ${formData.role} role.`);
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
 
@@ -88,6 +105,13 @@ const EditUserPage = () => {
         email: formData.email, 
         role: formData.role 
       };
+      
+      if (formData.role === ROLES.NURSE || formData.role === ROLES.WARD_ADMIN) {
+        payload.assignedWardId = formData.assignedWardId;
+      } else {
+        payload.assignedWardId = null; // Clear if role changed to one that doesn't need it
+      }
+
       if (formData.password) payload.password = formData.password;
 
       await axiosInstance.put(`/users/${id}`, payload);
@@ -108,6 +132,8 @@ const EditUserPage = () => {
       </FormPageLayout>
     );
   }
+  
+  const requiresWardAssignment = formData.role === ROLES.NURSE || formData.role === ROLES.WARD_ADMIN;
 
   return (
     <FormPageLayout
@@ -143,11 +169,12 @@ const EditUserPage = () => {
         />
         <FormField 
           id="password" 
-          type="password" 
-          label="New Password (leave blank to keep current)" 
+          type="text" 
+          label="Reset Temporary Password (leave blank to keep current)" 
           value={formData.password} 
           onChange={handleChange} 
           disabled={isSubmitting}
+          placeholder="If filled, user will be forced to change this on next login"
         />
         <FormField 
           id="role" 
@@ -158,6 +185,24 @@ const EditUserPage = () => {
           options={roleOptions}
           disabled={isSubmitting}
         />
+
+        {requiresWardAssignment && (
+          <div style={{ padding: '16px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '20px' }}>
+            <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#475569' }}>
+              <strong>Note:</strong> The {formData.role} role must be strictly assigned to a specific ward.
+            </p>
+            <FormField 
+              id="assignedWardId" 
+              type="select" 
+              label="Assign to Ward" 
+              value={formData.assignedWardId} 
+              onChange={handleChange} 
+              options={[{ value: '', label: 'Select a Ward...' }, ...wards]}
+              disabled={isSubmitting}
+              required
+            />
+          </div>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
           <button 

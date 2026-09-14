@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
 import { useToast } from '../../../context/ToastContext';
@@ -22,17 +22,35 @@ const AddUserPage = () => {
     fullName: '',
     email: '',
     password: '',
-    role: ROLES.STAFF
+    role: ROLES.NURSE,
+    assignedWardId: ''
   });
+  
+  const [wards, setWards] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const roleOptions = [
     { value: ROLES.ADMIN, label: 'System Admin' },
-    { value: ROLES.WARD_ADMIN, label: 'Ward Admin' },
-    { value: ROLES.STAFF, label: 'Staff Nurse' },
-    { value: ROLES.DOCTOR, label: 'Medical Doctor' }
+    { value: ROLES.WARD_ADMIN, label: 'Ward Administrator' },
+    { value: ROLES.ADMISSION_DOCTOR, label: 'Admission Doctor' },
+    { value: ROLES.NURSE, label: 'Nurse' },
+    { value: ROLES.DOCTOR, label: 'Doctor' }
   ];
+
+  // Fetch wards for the assignment dropdown
+  useEffect(() => {
+    const fetchWards = async () => {
+      try {
+        const response = await axiosInstance.get('/wards');
+        const list = Array.isArray(response.data.wards) ? response.data.wards : [];
+        setWards(list.map(w => ({ value: w.id, label: w.wardName })));
+      } catch (err) {
+        console.error('Failed to fetch wards', err);
+      }
+    };
+    fetchWards();
+  }, []);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -42,7 +60,12 @@ const AddUserPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.fullName.trim() || !formData.email.trim() || !formData.password) {
-      setError('Name, Email, and Password are required.');
+      setError('Name, Email, and Temporary Password are required.');
+      return;
+    }
+
+    if ((formData.role === ROLES.NURSE || formData.role === ROLES.WARD_ADMIN) && !formData.assignedWardId) {
+      setError(`Assigning a Ward is mandatory for the ${formData.role} role.`);
       return;
     }
 
@@ -51,7 +74,7 @@ const AddUserPage = () => {
 
     try {
       await axiosInstance.post('/users', formData);
-      addToast('User created successfully', 'success');
+      addToast('User created successfully. They will be forced to change their password on first login.', 'success');
       navigate('/admin/users');
     } catch (err) {
       console.error('Save error:', err);
@@ -60,6 +83,8 @@ const AddUserPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  const requiresWardAssignment = formData.role === ROLES.NURSE || formData.role === ROLES.WARD_ADMIN;
 
   return (
     <FormPageLayout
@@ -95,12 +120,13 @@ const AddUserPage = () => {
         />
         <FormField 
           id="password" 
-          type="password" 
-          label="Password" 
+          type="text" 
+          label="Temporary Password" 
           value={formData.password} 
           onChange={handleChange} 
           required 
           disabled={isSubmitting}
+          placeholder="e.g. TempPass123! (User must change this on first login)"
         />
         <FormField 
           id="role" 
@@ -111,6 +137,24 @@ const AddUserPage = () => {
           options={roleOptions}
           disabled={isSubmitting}
         />
+
+        {requiresWardAssignment && (
+          <div style={{ padding: '16px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '20px' }}>
+            <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#475569' }}>
+              <strong>Note:</strong> The {formData.role} role must be strictly assigned to a specific ward.
+            </p>
+            <FormField 
+              id="assignedWardId" 
+              type="select" 
+              label="Assign to Ward" 
+              value={formData.assignedWardId} 
+              onChange={handleChange} 
+              options={[{ value: '', label: 'Select a Ward...' }, ...wards]}
+              disabled={isSubmitting}
+              required
+            />
+          </div>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
           <button 

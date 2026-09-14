@@ -9,7 +9,8 @@
 export const ROLES = {
   ADMIN: 'admin',
   WARD_ADMIN: 'wardAdmin',
-  STAFF: 'staff',
+  ADMISSION_DOCTOR: 'admissionDoctor',
+  NURSE: 'nurse',
   DOCTOR: 'doctor'
 };
 
@@ -17,7 +18,8 @@ export const ROLES = {
 export const ROLE_DASHBOARDS = {
   [ROLES.ADMIN]: '/admin',
   [ROLES.WARD_ADMIN]: '/ward-admin',
-  [ROLES.STAFF]: '/staff',
+  [ROLES.ADMISSION_DOCTOR]: '/staff', // Maps to the same dashboard for now until further split
+  [ROLES.NURSE]: '/staff', // Maps to the same dashboard for now until further split
   [ROLES.DOCTOR]: '/doctor'
 };
 

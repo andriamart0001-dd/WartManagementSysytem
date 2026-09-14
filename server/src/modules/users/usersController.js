@@ -51,7 +51,12 @@ const getAllUsers = async (req, res) => {
   try {
     // Get all users from the database, ordered from newest to oldest
     // Note: We never SELECT * in production — but for academic clarity we do here
-    const getAllUsersSql = 'SELECT * FROM users ORDER BY createdAt DESC';
+    const getAllUsersSql = `
+      SELECT u.*, uwa.wardId AS assignedWardId 
+      FROM users u
+      LEFT JOIN user_ward_assignments uwa ON u.id = uwa.userId
+      ORDER BY u.createdAt DESC
+    `;
     const [userRows] = await db.query(getAllUsersSql);
 
     // Remove the passwordHash from every user object in the list
@@ -83,7 +88,13 @@ const getUserById = async (req, res) => {
 
   try {
     // Find the user with this exact ID — parameterized query prevents SQL injection
-    const findUserSql = 'SELECT * FROM users WHERE id = ? LIMIT 1';
+    const findUserSql = `
+      SELECT u.*, uwa.wardId AS assignedWardId 
+      FROM users u
+      LEFT JOIN user_ward_assignments uwa ON u.id = uwa.userId
+      WHERE u.id = ? 
+      LIMIT 1
+    `;
     const [userRows] = await db.query(findUserSql, [targetUserId]);
 
     // If no user was found with that ID, return a 404 error
@@ -118,7 +129,7 @@ const getUserById = async (req, res) => {
 // =============================================================================
 const createUser = async (req, res) => {
   // Read the fields sent in the request body
-  const { fullName, email, password, role, contactNumber } = req.body;
+  const { fullName, email, password, role, contactNumber, assignedWardId } = req.body;
 
   // The admin who is making this request — their ID comes from the JWT via req.user
   const adminUserId = req.user.id;
@@ -135,6 +146,13 @@ const createUser = async (req, res) => {
   if (!Object.values(ROLES).includes(role)) {
     return res.status(400).json({
       message: `Invalid role specified. Allowed roles are: ${Object.values(ROLES).join(', ')}`
+    });
+  }
+
+  // If role is Nurse or Ward Admin, a ward assignment is mandatory per PDF guidelines
+  if ((role === ROLES.NURSE || role === ROLES.WARD_ADMIN) && !assignedWardId) {
+    return res.status(400).json({
+      message: `Role ${role} requires an assignedWardId`
     });
   }
 
@@ -159,8 +177,8 @@ const createUser = async (req, res) => {
 
     // --- Step 3: Insert the new user into the database ---
     const insertUserSql = `
-      INSERT INTO users (fullName, email, passwordHash, role, contactNumber, status, createdBy, updatedBy)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (fullName, email, passwordHash, role, contactNumber, status, isTemporaryPassword, createdBy, updatedBy)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     // The values array matches the ? placeholders above in the same order
@@ -171,6 +189,7 @@ const createUser = async (req, res) => {
       role,
       contactNumber || null,   // Optional field — use null if not provided
       USER_STATUS.ACTIVE,      // New users are active by default
+      true,                    // All newly created passwords by Admin are temporary
       adminUserId,             // Who created this user
       adminUserId              // updatedBy also set to creator at time of creation
     ];
@@ -180,11 +199,20 @@ const createUser = async (req, res) => {
     // The insertId is the auto-generated primary key (id) of the new row
     const newUserId = insertResult.insertId;
 
+    // --- Step 3.5: If assignedWardId is present, insert into user_ward_assignments ---
+    if (assignedWardId && (role === ROLES.NURSE || role === ROLES.WARD_ADMIN)) {
+      const assignSql = `INSERT INTO user_ward_assignments (userId, wardId) VALUES (?, ?)`;
+      await db.query(assignSql, [newUserId, assignedWardId]);
+    }
+
     // --- Step 4: Fetch the newly created user to return in the response ---
-    const [newUserRows] = await db.query(
-      'SELECT * FROM users WHERE id = ? LIMIT 1',
-      [newUserId]
-    );
+    const fetchUserSql = `
+      SELECT u.*, uwa.wardId AS assignedWardId 
+      FROM users u
+      LEFT JOIN user_ward_assignments uwa ON u.id = uwa.userId
+      WHERE u.id = ? LIMIT 1
+    `;
+    const [newUserRows] = await db.query(fetchUserSql, [newUserId]);
 
     const safeNewUserData = sanitizeUser(newUserRows[0]);
 
@@ -216,7 +244,7 @@ const updateUser = async (req, res) => {
   const adminUserId = req.user.id;
 
   // Read all possible updatable fields from the request body
-  const { fullName, email, password, role, contactNumber, status } = req.body;
+  const { fullName, email, password, role, contactNumber, status, assignedWardId } = req.body;
 
   try {
     // --- Step 1: Confirm the user we are updating actually exists ---
@@ -271,6 +299,9 @@ const updateUser = async (req, res) => {
       const newHashedPassword = await bcrypt.hash(password, saltRounds);
       fieldsToUpdate.push('passwordHash = ?');
       updateValues.push(newHashedPassword);
+      // If admin updates the password manually, reset it to temporary
+      fieldsToUpdate.push('isTemporaryPassword = ?');
+      updateValues.push(true);
     }
 
     // Always update the updatedBy field to record who made this change
@@ -278,7 +309,7 @@ const updateUser = async (req, res) => {
     updateValues.push(adminUserId);
 
     // If nothing was provided to update, return an error
-    if (fieldsToUpdate.length === 1) { // Only updatedBy was added
+    if (fieldsToUpdate.length === 1 && assignedWardId === undefined) { // Only updatedBy was added
       return res.status(400).json({
         message: 'No update fields were provided in the request body'
       });
@@ -286,18 +317,29 @@ const updateUser = async (req, res) => {
 
     // --- Step 3: Build and execute the final UPDATE query ---
     // We join the fieldsToUpdate array with commas to create: "fullName = ?, email = ?, ..."
-    const updateSql = `UPDATE users SET ${fieldsToUpdate.join(', ')} WHERE id = ?`;
+    if (fieldsToUpdate.length > 1) {
+      const updateSql = `UPDATE users SET ${fieldsToUpdate.join(', ')} WHERE id = ?`;
+      updateValues.push(targetUserId);
+      await db.query(updateSql, updateValues);
+    }
 
-    // Add the targetUserId at the end for the WHERE clause's ? placeholder
-    updateValues.push(targetUserId);
-
-    await db.query(updateSql, updateValues);
+    // --- Step 3.5: Handle assignedWardId update if provided ---
+    // We remove the old assignment and insert the new one
+    if (assignedWardId !== undefined) {
+      await db.query('DELETE FROM user_ward_assignments WHERE userId = ?', [targetUserId]);
+      if (assignedWardId !== null && assignedWardId !== '') {
+        await db.query('INSERT INTO user_ward_assignments (userId, wardId) VALUES (?, ?)', [targetUserId, assignedWardId]);
+      }
+    }
 
     // --- Step 4: Fetch the updated user to return in the response ---
-    const [updatedUserRows] = await db.query(
-      'SELECT * FROM users WHERE id = ? LIMIT 1',
-      [targetUserId]
-    );
+    const fetchUserSql = `
+      SELECT u.*, uwa.wardId AS assignedWardId 
+      FROM users u
+      LEFT JOIN user_ward_assignments uwa ON u.id = uwa.userId
+      WHERE u.id = ? LIMIT 1
+    `;
+    const [updatedUserRows] = await db.query(fetchUserSql, [targetUserId]);
 
     const safeUpdatedUserData = sanitizeUser(updatedUserRows[0]);
 

@@ -103,6 +103,7 @@ const loginUser = async (req, res) => {
     return res.status(200).json({
       message: 'Login successful',
       token: token,
+      requirePasswordChange: userRecord.isTemporaryPassword === 1,
       user: {
         id: userRecord.id,
         fullName: userRecord.fullName,
@@ -122,6 +123,41 @@ const loginUser = async (req, res) => {
 };
 
 // -----------------------------------------------------------------------------
+// changePassword — POST /api/auth/change-password
+// -----------------------------------------------------------------------------
+// Used by users to change their temporary password to a permanent one.
+// -----------------------------------------------------------------------------
+const changePassword = async (req, res) => {
+  const userId = req.user.id;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'Please provide both current and new passwords' });
+  }
+
+  try {
+    const [rows] = await db.query('SELECT passwordHash FROM users WHERE id = ? LIMIT 1', [userId]);
+    if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, rows[0].passwordHash);
+    if (!isMatch) return res.status(401).json({ message: 'Current password is incorrect' });
+
+    const saltRounds = 10;
+    const newHashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await db.query(
+      'UPDATE users SET passwordHash = ?, isTemporaryPassword = false, updatedBy = ? WHERE id = ?',
+      [newHashedPassword, userId, userId]
+    );
+
+    return res.status(200).json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    return res.status(500).json({ message: 'Error changing password' });
+  }
+};
+
+// -----------------------------------------------------------------------------
 // getMe — GET /api/auth/me
 // -----------------------------------------------------------------------------
 // Requires: authenticateJWT middleware (populates req.user)
@@ -134,7 +170,7 @@ const getMe = async (req, res) => {
 
     // Fetch user details from database, omitting passwordHash
     const findUserSql = `
-      SELECT id, fullName, email, role, contactNumber, status, createdAt, updatedAt
+      SELECT id, fullName, email, role, contactNumber, status, isTemporaryPassword, createdAt, updatedAt
       FROM users
       WHERE id = ? LIMIT 1
     `;
@@ -161,6 +197,7 @@ const getMe = async (req, res) => {
 // Export the controller functions so the route file can use them
 module.exports = {
   loginUser,
+  changePassword,
   getMe
 };
 
