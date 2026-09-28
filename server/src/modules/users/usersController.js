@@ -110,10 +110,37 @@ const deactivateUser = async (req, res) => {
   }
 };
 
+const resetPassword = async (req, res) => {
+  try {
+    const targetUserId = req.params.id;
+    const { temporaryPassword } = req.body;
+    const adminUserId = req.user.id;
+
+    if (!temporaryPassword || temporaryPassword.length < 6) {
+      return res.status(400).json({ message: 'Temporary password must be at least 6 characters' });
+    }
+
+    const user = await usersService.resetPassword(targetUserId, temporaryPassword, adminUserId);
+    
+    return res.status(200).json({
+      message: `Password for ${user.fullName} has been reset. They will be required to change it on next login.`
+    });
+  } catch (error) {
+    if (error.message === 'User not found') {
+      return res.status(404).json({ message: error.message });
+    }
+    console.error('Reset password error:', error);
+    return res.status(500).json({
+      message: 'An internal server error occurred while resetting the password.'
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
-  deactivateUser
+  deactivateUser,
+  resetPassword
 };

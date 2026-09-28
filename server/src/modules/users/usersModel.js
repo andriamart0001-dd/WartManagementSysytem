@@ -82,6 +82,17 @@ const deactivateUserStatus = async (userId, status, updatedBy) => {
   await db.query(sql, [status, updatedBy, userId]);
 };
 
+// Reset a user's password to a new temporary password (Admin only)
+// Sets isTemporaryPassword = true so the user is forced to change it on next login
+const resetUserPassword = async (userId, newHashedPassword, adminId) => {
+  const sql = `
+    UPDATE users
+    SET passwordHash = ?, isTemporaryPassword = true, updatedBy = ?
+    WHERE id = ?
+  `;
+  await db.query(sql, [newHashedPassword, adminId, userId]);
+};
+
 module.exports = {
   findAllUsers,
   findUserById,
@@ -91,5 +102,6 @@ module.exports = {
   deleteUserWardAssignment,
   updateUser,
   findUserStatus,
-  deactivateUserStatus
+  deactivateUserStatus,
+  resetUserPassword
 };

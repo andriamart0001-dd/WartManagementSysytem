@@ -169,10 +169,28 @@ const deactivateUser = async (targetUserId, adminUserId) => {
   await usersModel.deactivateUserStatus(targetUserId, USER_STATUS.INACTIVE, adminUserId);
 };
 
+const resetPassword = async (targetUserId, temporaryPassword, adminUserId) => {
+  // Confirm user exists
+  const existingUser = await usersModel.findUserById(targetUserId);
+  if (!existingUser) {
+    throw new Error('User not found');
+  }
+
+  // Hash the temporary password
+  const saltRounds = 10;
+  const newHashedPassword = await bcrypt.hash(temporaryPassword, saltRounds);
+
+  // Update password in DB
+  await usersModel.resetUserPassword(targetUserId, newHashedPassword, adminUserId);
+  
+  return sanitizeUser(existingUser);
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
-  deactivateUser
+  deactivateUser,
+  resetPassword
 };

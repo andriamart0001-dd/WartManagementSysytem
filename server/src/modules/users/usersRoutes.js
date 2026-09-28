@@ -29,7 +29,8 @@ const {
   getUserById,
   createUser,
   updateUser,
-  deactivateUser
+  deactivateUser,
+  resetPassword
 } = require('./usersController');
 
 // =============================================================================
@@ -77,6 +78,14 @@ router.patch(
   authenticateJWT,
   authorizeRoles(ROLES.ADMIN),
   deactivateUser
+);
+
+// PATCH /api/users/:id/reset-password — Reset user password
+router.patch(
+  '/:id/reset-password',
+  authenticateJWT,
+  authorizeRoles(ROLES.ADMIN),
+  resetPassword
 );
 
 // Export the router so the main app.js can mount it at /api/users
