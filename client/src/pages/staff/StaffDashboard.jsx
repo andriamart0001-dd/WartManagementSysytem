@@ -9,6 +9,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import QRPrintModal from '../../components/ui/QRPrintModal';
+import QRScannerModal from '../../components/ui/QRScannerModal';
 
 // =============================================================================
 // StaffDashboard.jsx
@@ -28,6 +29,9 @@ const StaffDashboard = () => {
 
   // QR Modal State
   const [qrModalData, setQrModalData] = useState(null);
+  
+  // Scanner Modal State
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const fetchAdmissions = async () => {
     setIsLoading(true);
@@ -51,6 +55,22 @@ const StaffDashboard = () => {
     // eslint-disable-next-line
   }, []);
 
+  const handleScanSuccess = (decodedText) => {
+    try {
+      const data = JSON.parse(decodedText);
+      if (data && data.admissionId) {
+        addToast('QR Code scanned successfully!', 'success');
+        setIsScannerOpen(false);
+        // Automatically redirect to log vitals for this patient
+        navigate(`/staff/vitals/new?admissionId=${data.admissionId}`);
+      } else {
+        addToast('Invalid QR Code format', 'error');
+      }
+    } catch (e) {
+      addToast('Failed to parse QR Code data', 'error');
+    }
+  };
+
   return (
     <div className="dashboard-page">
       <PageHeader 
@@ -62,12 +82,18 @@ const StaffDashboard = () => {
       />
 
       {/* Quick Actions Row */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <button className="action-btn" style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} onClick={() => setIsScannerOpen(true)}>
+          📷 Scan QR
+        </button>
         <button className="action-btn" style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} onClick={() => navigate('/staff/transfers/internal/new')}>
           🔄 Internal Transfer
         </button>
         <button className="action-btn" style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} onClick={() => navigate('/staff/transfers/external/new')}>
           🚑 External Transfer
+        </button>
+        <button className="action-btn" style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} onClick={() => navigate('/staff/transfers/external/return')}>
+          🏥 Return Patient
         </button>
         <button className="action-btn" style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} onClick={() => navigate('/staff/vitals/new')}>
           🩸 Log Vitals
@@ -127,6 +153,13 @@ const StaffDashboard = () => {
           admissionDate={qrModalData.admissionDate}
         />
       )}
+
+      {/* QR Scanner Modal */}
+      <QRScannerModal 
+        isOpen={isScannerOpen} 
+        onClose={() => setIsScannerOpen(false)} 
+        onScanSuccess={handleScanSuccess} 
+      />
 
     </div>
   );

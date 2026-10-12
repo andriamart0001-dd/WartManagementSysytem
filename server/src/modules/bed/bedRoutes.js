@@ -30,4 +30,11 @@ router.put('/:id/status',
   bedController.updateBedStatus
 );
 
+// PUT /api/beds/:id - Edit bed details (Admin and WardAdmin)
+router.put('/:id', 
+  authenticateJWT, 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN), 
+  bedController.updateBed
+);
+
 module.exports = router;

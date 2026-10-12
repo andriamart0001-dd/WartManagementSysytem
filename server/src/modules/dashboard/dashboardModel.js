@@ -13,6 +13,16 @@ const countActiveAdmissions = async () => {
   return rows[0].count;
 };
 
+const countTotalUsers = async () => {
+  const [rows] = await db.query('SELECT COUNT(id) as count FROM users');
+  return rows[0].count;
+};
+
+const countTotalWards = async () => {
+  const [rows] = await db.query('SELECT COUNT(id) as count FROM ward WHERE status = "active"');
+  return rows[0].count;
+};
+
 const getBedStats = async () => {
   const [rows] = await db.query(`
     SELECT 
@@ -49,6 +59,8 @@ const getEquipmentShortages = async () => {
 
 module.exports = {
   countActiveAdmissions,
+  countTotalUsers,
+  countTotalWards,
   getBedStats,
   getWardShortages,
   getEquipmentShortages

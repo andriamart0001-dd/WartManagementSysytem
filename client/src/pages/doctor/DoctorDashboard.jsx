@@ -8,6 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import PageHeader from '../../components/ui/PageHeader';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
+import QRScannerModal from '../../components/ui/QRScannerModal';
 
 // =============================================================================
 // DoctorDashboard.jsx
@@ -26,6 +27,9 @@ const DoctorDashboard = () => {
   // List of active admitted patients
   const [admissions, setAdmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Scanner Modal State
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // ===========================================================================
   // DATA FETCHING
@@ -53,6 +57,22 @@ const DoctorDashboard = () => {
     // eslint-disable-next-line
   }, []);
 
+  const handleScanSuccess = (decodedText) => {
+    try {
+      const data = JSON.parse(decodedText);
+      if (data && data.admissionId) {
+        addToast('QR Code scanned successfully!', 'success');
+        setIsScannerOpen(false);
+        // Automatically redirect to patient details
+        navigate(`/doctor/patient/${data.admissionId}`);
+      } else {
+        addToast('Invalid QR Code format', 'error');
+      }
+    } catch (e) {
+      addToast('Failed to parse QR Code data', 'error');
+    }
+  };
+
   // Navigate to the full patient detail page
   const viewPatientDetail = (admissionId) => {
     navigate(`/doctor/patient/${admissionId}`);
@@ -65,6 +85,16 @@ const DoctorDashboard = () => {
         subtitle={`Welcome back, Dr. ${user?.fullName}. Here are the currently admitted patients.`}
         icon="🩺"
       />
+
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        <button 
+          className="action-btn" 
+          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
+          onClick={() => setIsScannerOpen(true)}
+        >
+          📷 Scan Patient QR
+        </button>
+      </div>
 
       {/* Active Patient Table */}
       <DataTable
@@ -128,6 +158,13 @@ const DoctorDashboard = () => {
           ))
         )}
       </DataTable>
+
+      {/* QR Scanner Modal */}
+      <QRScannerModal 
+        isOpen={isScannerOpen} 
+        onClose={() => setIsScannerOpen(false)} 
+        onScanSuccess={handleScanSuccess} 
+      />
     </div>
   );
 };

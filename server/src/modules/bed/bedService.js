@@ -37,8 +37,24 @@ const updateBedStatus = async (id, status, userId) => {
   return await bedModel.findBedById(id);
 };
 
+const updateBed = async (id, bedData, userId) => {
+  const { wardId, bedNumber, bedStatus } = bedData;
+
+  if (!wardId || !bedNumber || !bedStatus) {
+    throw new Error('wardId, bedNumber, and bedStatus are required');
+  }
+
+  if (!Object.values(BED_STATUS).includes(bedStatus)) {
+    throw new Error(`Invalid status. Allowed: ${Object.values(BED_STATUS).join(', ')}`);
+  }
+
+  await bedModel.transactionUpdateBed(id, wardId, bedNumber, bedStatus, userId);
+  return await bedModel.findBedById(id);
+};
+
 module.exports = {
   getBeds,
   createBed,
-  updateBedStatus
+  updateBedStatus,
+  updateBed
 };

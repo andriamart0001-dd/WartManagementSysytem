@@ -3,6 +3,7 @@
 // =============================================================================
 
 const shortageAlertModel = require('./shortageAlertModel');
+const dashboardModel = require('../dashboard/dashboardModel');
 const { ALERT_TYPES } = require('../../constants');
 
 const getAlerts = async (status) => {
@@ -60,8 +61,44 @@ const resolveAlert = async (id, userId) => {
   return await shortageAlertModel.findAlertById(id);
 };
 
+const syncShortages = async (userId = 1) => {
+  // Get current state
+  const currentWardShortages = await dashboardModel.getWardShortages();
+  const currentEqShortages = await dashboardModel.getEquipmentShortages();
+  
+  // Get active alerts
+  const activeAlerts = await shortageAlertModel.findAlertsByStatus('active');
+
+  // Find alerts to resolve
+  for (const alert of activeAlerts) {
+    if (alert.alertType === ALERT_TYPES.BED_SHORTAGE) {
+      const stillShort = currentWardShortages.find(w => w.id === alert.wardId);
+      if (!stillShort) await resolveAlert(alert.id, userId);
+    } else if (alert.alertType === ALERT_TYPES.EQUIPMENT_SHORTAGE) {
+      const stillShort = currentEqShortages.find(e => e.id === alert.equipmentId);
+      if (!stillShort) await resolveAlert(alert.id, userId);
+    }
+  }
+
+  // Find alerts to create
+  for (const ward of currentWardShortages) {
+    const hasAlert = activeAlerts.find(a => a.alertType === ALERT_TYPES.BED_SHORTAGE && a.wardId === ward.id);
+    if (!hasAlert) {
+      await logAlert({ wardId: ward.id, alertType: ALERT_TYPES.BED_SHORTAGE }, userId);
+    }
+  }
+
+  for (const eq of currentEqShortages) {
+    const hasAlert = activeAlerts.find(a => a.alertType === ALERT_TYPES.EQUIPMENT_SHORTAGE && a.equipmentId === eq.id);
+    if (!hasAlert) {
+      await logAlert({ equipmentId: eq.id, alertType: ALERT_TYPES.EQUIPMENT_SHORTAGE }, userId);
+    }
+  }
+};
+
 module.exports = {
   getAlerts,
   logAlert,
-  resolveAlert
+  resolveAlert,
+  syncShortages
 };

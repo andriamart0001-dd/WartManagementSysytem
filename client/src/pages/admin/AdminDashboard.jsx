@@ -33,19 +33,15 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
-        const [summaryRes, usersRes, wardsRes] = await Promise.allSettled([
-          axiosInstance.get('/dashboard/summary'),
-          axiosInstance.get('/users'),
-          axiosInstance.get('/wards')
-        ]);
+        const summaryRes = await axiosInstance.get('/dashboard/summary');
+        
+        const summaryData = summaryRes.data?.data || summaryRes.data;
 
-        const summaryData = summaryRes.status === 'fulfilled' ? (summaryRes.value.data?.data || summaryRes.value.data) : {};
-        const usersList = usersRes.status === 'fulfilled' ? (usersRes.value.data?.users || usersRes.value.data) : [];
-        const wardsList = wardsRes.status === 'fulfilled' ? (wardsRes.value.data?.wards || wardsRes.value.data) : [];
-
-        const totalUsers = Array.isArray(usersList) ? usersList.length : (summaryData.totalUsers || 0);
-        const totalWards = Array.isArray(wardsList) ? wardsList.length : (summaryData.totalWards || 0);
-        const totalBeds = summaryData.bedStats?.total || summaryData.totalBeds || 0;
+        const totalUsers = summaryData.totalUsers || 0;
+        const totalWards = summaryData.totalWards || 0;
+        const totalBeds = summaryData.bedStats?.total || 0;
+        const activePatients = summaryData.totalActiveAdmissions || 0;
+        
         const wardShortageCount = Array.isArray(summaryData.shortages?.wards) ? summaryData.shortages.wards.length : 0;
         const equipShortageCount = Array.isArray(summaryData.shortages?.equipment) ? summaryData.shortages.equipment.length : 0;
 
@@ -53,7 +49,8 @@ const AdminDashboard = () => {
           totalUsers,
           totalWards,
           totalBeds,
-          activeAlerts: wardShortageCount + equipShortageCount || summaryData.activeAlerts || 0
+          activePatients,
+          activeAlerts: wardShortageCount + equipShortageCount
         });
 
         if (summaryData.shortages) {
@@ -109,6 +106,11 @@ const AdminDashboard = () => {
           title="Active Wards" 
           value={isLoading ? '...' : stats.totalWards} 
           icon="🏥" 
+        />
+        <StatCard 
+          title="Active Patients" 
+          value={isLoading ? '...' : stats.activePatients} 
+          icon="🧑‍⚕️" 
         />
         <StatCard 
           title="Total Beds" 

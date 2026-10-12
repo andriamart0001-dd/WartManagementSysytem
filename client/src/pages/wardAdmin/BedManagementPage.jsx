@@ -197,6 +197,13 @@ const BedManagementPage = () => {
                       ✅ Ready
                     </button>
                   )}
+                  <button 
+                    className="action-btn" 
+                    title="Edit Bed" 
+                    onClick={() => navigate(`/ward-admin/beds/${bed.id}/edit`)}
+                  >
+                    ✏️ Edit
+                  </button>
                 </div>
               </td>
             </tr>
