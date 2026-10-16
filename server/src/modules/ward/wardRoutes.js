@@ -14,10 +14,10 @@ const wardController = require('./wardController');
 // DEPARTMENT ROUTES (/api/departments) - Mounted in index.js
 // =============================================================================
 
-// GET /api/departments - Accessible by admin and wardAdmin
+// GET /api/departments - Accessible by all clinical and admin staff
 router.get('/departments', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   deptController.getAllDepartments
 );
 
@@ -33,12 +33,12 @@ router.delete('/departments/:id', authenticateJWT, authorizeRoles(ROLES.ADMIN), 
 // Everyone can view wards
 router.get('/wards', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   wardController.getAllWards
 );
 router.get('/wards/:id', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   wardController.getWardById
 );
 

@@ -9,10 +9,10 @@ const { ROLES } = require('../../constants');
 
 const hospitalController = require('./hospitalController');
 
-// GET /api/hospitals - View hospitals (all staff)
+// GET /api/hospitals - View hospitals (all clinical and admin staff)
 router.get('/', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   hospitalController.getAllHospitals
 );
 

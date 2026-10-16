@@ -39,7 +39,9 @@ const AppLayout = () => {
         return 'System Admin';
       case ROLES.WARD_ADMIN:
         return 'Ward Admin';
-      case ROLES.STAFF:
+      case ROLES.ADMISSION_DOCTOR:
+        return 'Admission Doctor';
+      case ROLES.NURSE:
         return 'Staff Nurse';
       case ROLES.DOCTOR:
         return 'Medical Doctor';
@@ -55,7 +57,8 @@ const AppLayout = () => {
         return 'badge-admin';
       case ROLES.WARD_ADMIN:
         return 'badge-ward-admin';
-      case ROLES.STAFF:
+      case ROLES.ADMISSION_DOCTOR:
+      case ROLES.NURSE:
         return 'badge-staff';
       case ROLES.DOCTOR:
         return 'badge-doctor';
@@ -157,6 +160,22 @@ const AppLayout = () => {
                     <span className="nav-icon">🚑</span>
                     <span>External Hospitals</span>
                   </NavLink>
+                  <NavLink
+                    to="/admin/alerts"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🚨</span>
+                    <span>Shortage Alerts</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admin/admissions"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📋</span>
+                    <span>Admission History</span>
+                  </NavLink>
                 </>
               )}
 
@@ -187,10 +206,18 @@ const AppLayout = () => {
                     <span className="nav-icon">🪛</span>
                     <span>Equipment Inventory</span>
                   </NavLink>
+                  <NavLink
+                    to="/admin/alerts"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🚨</span>
+                    <span>Shortage Alerts</span>
+                  </NavLink>
                 </>
               )}
 
-              {user?.role === ROLES.STAFF && (
+              {(user?.role === ROLES.NURSE || user?.role === ROLES.ADMISSION_DOCTOR) && (
                 <>
                   <NavLink
                     to="/staff"

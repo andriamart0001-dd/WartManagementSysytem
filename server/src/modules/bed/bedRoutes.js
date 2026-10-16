@@ -12,7 +12,7 @@ const bedController = require('./bedController');
 // GET /api/beds - View beds (everyone can view)
 router.get('/', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   bedController.getBeds
 );
 
@@ -23,10 +23,10 @@ router.post('/',
   bedController.createBed
 );
 
-// PUT /api/beds/:id/status - Update bed status (Admin, WardAdmin, Staff)
+// PUT /api/beds/:id/status - Update bed status (Admin, WardAdmin, AdmissionDoctor, Nurse)
 router.put('/:id/status', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE), 
   bedController.updateBedStatus
 );
 

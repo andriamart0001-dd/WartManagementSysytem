@@ -12,7 +12,7 @@ const alertController = require('./shortageAlertController');
 // All staff can view alerts
 router.get('/', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   alertController.getAlerts
 );
 

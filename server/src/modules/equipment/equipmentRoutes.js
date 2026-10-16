@@ -12,7 +12,7 @@ const equipmentController = require('./equipmentController');
 // All staff can view equipment
 router.get('/', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   equipmentController.getEquipment
 );
 
@@ -29,17 +29,17 @@ router.put('/:id',
   equipmentController.updateEquipment
 );
 
-// All staff (except doctor usually, but let's allow staff/wardAdmin/admin) can log maintenance
+// Admin, WardAdmin, and Nurses can log maintenance
 router.post('/:id/maintenance', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE), 
   equipmentController.logMaintenance
 );
 
 // View maintenance logs
 router.get('/:id/maintenance', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   equipmentController.getMaintenanceLogs
 );
 

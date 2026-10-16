@@ -29,6 +29,8 @@ import UserManagementPage from './pages/admin/UserManagementPage';
 import WardManagementPage from './pages/admin/WardManagementPage';
 import DepartmentManagementPage from './pages/admin/DepartmentManagementPage';
 import HospitalManagementPage from './pages/admin/HospitalManagementPage';
+import AlertManagementPage from './pages/admin/AlertManagementPage';
+import AdmissionHistoryPage from './pages/admin/AdmissionHistoryPage';
 import AddUserPage from './pages/admin/forms/AddUserPage';
 import EditUserPage from './pages/admin/forms/EditUserPage';
 import AddWardPage from './pages/admin/forms/AddWardPage';
@@ -172,6 +174,22 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
                       <HospitalManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/alerts"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN]}>
+                      <AlertManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/admissions"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.DOCTOR]}>
+                      <AdmissionHistoryPage />
                     </ProtectedRoute>
                   }
                 />

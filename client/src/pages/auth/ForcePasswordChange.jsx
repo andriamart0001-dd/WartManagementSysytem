@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../../../api/axiosInstance';
-import { useAuth } from '../../../context/AuthContext';
-import { useToast } from '../../../context/ToastContext';
+import axiosInstance from '../../api/axiosInstance';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 // =============================================================================
 // ForcePasswordChange.jsx

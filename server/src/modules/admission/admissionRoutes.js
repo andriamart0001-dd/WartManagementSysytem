@@ -12,28 +12,28 @@ const admissionController = require('./admissionController');
 // GET /api/admissions - View all active admissions (everyone)
 router.get('/', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   admissionController.getAdmissions
 );
 
 // GET /api/admissions/history - View all admission history (filtered by query)
 router.get('/history', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   admissionController.getAllAdmissions
 );
 
 // GET /api/admissions/:id - View details of a specific admission
 router.get('/:id', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   admissionController.getAdmissionById
 );
 
-// POST /api/admissions - Admit a new patient (Admin, WardAdmin, Staff)
+// POST /api/admissions - Admit a new patient (Admin, WardAdmin, AdmissionDoctor, Nurse)
 router.post('/', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE), 
   admissionController.createAdmission
 );
 
@@ -45,23 +45,11 @@ router.post('/:id/discharge',
 );
 
 // =============================================================================
-// VITALS ROUTES (/api/admissions/:id/vitals)
+// VITALS SUB-ROUTES (/api/admissions/:id/vitals)
 // =============================================================================
-const vitalsController = require('../vitals/vitalsController');
-
-// POST /api/admissions/:id/vitals - Log vitals
-router.post('/:id/vitals',
-  authenticateJWT,
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR),
-  vitalsController.logVitals
-);
-
-// GET /api/admissions/:id/vitals - View vitals
-router.get('/:id/vitals',
-  authenticateJWT,
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR),
-  vitalsController.getVitals
-);
+// Delegate to vitalsRoutes so all vitals logic stays in its own module
+const vitalsRoutes = require('../vitals/vitalsRoutes');
+router.use('/:id/vitals', vitalsRoutes);
 
 module.exports = router;
 

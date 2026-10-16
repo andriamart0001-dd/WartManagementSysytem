@@ -12,7 +12,7 @@ const dashboardController = require('./dashboardController');
 // GET /api/dashboard/summary - View overall dashboard statistics (Everyone can view)
 router.get('/summary', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   dashboardController.getSummary
 );
 
