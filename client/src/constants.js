@@ -75,6 +75,18 @@ export const ALERT_TYPES = {
   EQUIPMENT_SHORTAGE: 'equipmentShortage'
 };
 
+// Clinical request status constants
+export const REQUEST_STATUS = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected'
+};
+
+// Clinical request type constants
+export const REQUEST_TYPE = {
+  DISCHARGE: 'discharge'
+};
+
 // Local storage keys for session persistence
 export const STORAGE_KEYS = {
   TOKEN: 'ward_system_token',

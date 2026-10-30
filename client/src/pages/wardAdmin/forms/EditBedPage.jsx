@@ -10,7 +10,7 @@ import { BED_STATUS } from '../../../constants';
 // EditBedPage.jsx
 // =============================================================================
 // Purpose:
-//   Ward Admin interface to edit an existing bed (change its number, ward, or status).
+//   Ward Admin interface to edit an existing bed (change its number, ward, section, or status).
 //   Route: GET /ward-admin/beds/:id/edit
 // =============================================================================
 
@@ -20,10 +20,12 @@ const EditBedPage = () => {
   const { addToast } = useToast();
 
   const [wards, setWards] = useState([]);
+  const [sections, setSections] = useState([]);
   const [formData, setFormData] = useState({
     wardId: '',
     bedNumber: '',
-    bedStatus: ''
+    bedStatus: '',
+    sectionId: ''
   });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -33,15 +35,21 @@ const EditBedPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [wardsRes, bedsRes] = await Promise.all([
+        const [wardsRes, bedsRes, sectionsRes] = await Promise.all([
           axiosInstance.get('/wards'),
-          axiosInstance.get('/beds')
+          axiosInstance.get('/beds'),
+          axiosInstance.get('/sections')
         ]);
 
         const wardList = Array.isArray(wardsRes.data.wards) 
           ? wardsRes.data.wards 
           : (Array.isArray(wardsRes.data) ? wardsRes.data : []);
         setWards(wardList);
+
+        const sectionList = Array.isArray(sectionsRes.data.sections)
+          ? sectionsRes.data.sections
+          : (Array.isArray(sectionsRes.data) ? sectionsRes.data : []);
+        setSections(sectionList);
 
         // Find the bed we're editing
         const bedList = Array.isArray(bedsRes.data.beds) 
@@ -59,7 +67,8 @@ const EditBedPage = () => {
         setFormData({
           wardId: targetBed.wardId?.toString() || '',
           bedNumber: targetBed.bedNumber || '',
-          bedStatus: targetBed.status || targetBed.bedStatus || BED_STATUS.AVAILABLE
+          bedStatus: targetBed.status || targetBed.bedStatus || BED_STATUS.AVAILABLE,
+          sectionId: targetBed.sectionId ? targetBed.sectionId.toString() : ''
         });
 
       } catch (err) {
@@ -75,7 +84,12 @@ const EditBedPage = () => {
 
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
+    if (id === 'wardId') {
+      // If ward changes, clear the sectionId selection
+      setFormData(prev => ({ ...prev, wardId: value, sectionId: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, [id]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -91,8 +105,9 @@ const EditBedPage = () => {
     try {
       const payload = {
         wardId: parseInt(formData.wardId, 10),
-        bedNumber: formData.bedNumber,
-        bedStatus: formData.bedStatus
+        bedNumber: formData.bedNumber.trim(),
+        bedStatus: formData.bedStatus,
+        sectionId: formData.sectionId ? parseInt(formData.sectionId, 10) : null
       };
 
       await axiosInstance.put(`/beds/${id}`, payload);
@@ -108,6 +123,19 @@ const EditBedPage = () => {
 
   const wardOptions = wards.map(w => ({ value: w.id.toString(), label: w.wardName || w.name }));
   
+  // Available sections for the currently selected ward
+  const availableSections = sections.filter(
+    s => s.wardId && s.wardId.toString() === formData.wardId.toString()
+  );
+
+  const sectionOptions = [
+    { value: '', label: '-- None (No Section) --' },
+    ...availableSections.map(s => ({
+      value: s.id.toString(),
+      label: s.sectionName
+    }))
+  ];
+
   const statusOptions = [
     { value: BED_STATUS.AVAILABLE, label: 'Available' },
     { value: BED_STATUS.OCCUPIED, label: 'Occupied' },
@@ -139,6 +167,16 @@ const EditBedPage = () => {
           onChange={handleChange} 
           options={wardOptions} 
           required 
+          disabled={isSubmitting} 
+        />
+
+        <FormField 
+          id="sectionId" 
+          type="select" 
+          label="Assigned Section (Optional)" 
+          value={formData.sectionId} 
+          onChange={handleChange} 
+          options={sectionOptions} 
           disabled={isSubmitting} 
         />
         

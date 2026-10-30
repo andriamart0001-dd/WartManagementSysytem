@@ -122,10 +122,24 @@ export const AuthProvider = ({ children }) => {
       if (response.data.user) {
         setUser(response.data.user);
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.data.user));
+        return response.data.user;
       }
     } catch (err) {
       console.error('Failed to re-fetch user:', err);
     }
+    return null;
+  };
+
+  // ===========================================================================
+  // UPDATE USER FUNCTION
+  // Directly updates current user object in state and localStorage immediately
+  // ===========================================================================
+  const updateUser = (updatedFields) => {
+    setUser((prevUser) => {
+      const newUser = { ...prevUser, ...updatedFields };
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser));
+      return newUser;
+    });
   };
 
   // ===========================================================================
@@ -151,7 +165,8 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     login,
     logout,
-    checkAuth
+    checkAuth,
+    updateUser
   };
 
   return (

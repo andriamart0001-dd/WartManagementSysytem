@@ -42,14 +42,20 @@ const authenticateUser = async (email, password) => {
     { expiresIn: process.env.JWT_EXPIRES_IN }
   );
 
+  // Check if user is flagged for mandatory password change on first login
+  const isTemporary = userRecord.isTemporaryPassword === 1 || 
+                      userRecord.isTemporaryPassword === true || 
+                      userRecord.isTemporaryPassword === '1';
+
   return {
     token,
-    requirePasswordChange: userRecord.isTemporaryPassword === 1,
+    requirePasswordChange: isTemporary,
     user: {
       id: userRecord.id,
       fullName: userRecord.fullName,
       email: userRecord.email,
-      role: userRecord.role
+      role: userRecord.role,
+      isTemporaryPassword: isTemporary ? 1 : 0
     }
   };
 };

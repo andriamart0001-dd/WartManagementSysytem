@@ -5,10 +5,12 @@
 const db = require('../../config/db');
 
 const findAllBeds = async (wardId) => {
+  // Query to select all beds, joined with ward name and optional section name
   let sql = `
-    SELECT b.*, w.wardName 
+    SELECT b.*, w.wardName, s.sectionName 
     FROM bed b
     JOIN ward w ON b.wardId = w.id
+    LEFT JOIN section s ON b.sectionId = s.id
   `;
   const values = [];
 
@@ -24,12 +26,20 @@ const findAllBeds = async (wardId) => {
 };
 
 const findBedById = async (id) => {
-  const sql = 'SELECT * FROM bed WHERE id = ? LIMIT 1';
+  // Query to select a single bed by ID, with ward name and section name
+  const sql = `
+    SELECT b.*, w.wardName, s.sectionName 
+    FROM bed b
+    JOIN ward w ON b.wardId = w.id
+    LEFT JOIN section s ON b.sectionId = s.id
+    WHERE b.id = ? 
+    LIMIT 1
+  `;
   const [rows] = await db.query(sql, [id]);
   return rows.length > 0 ? rows[0] : null;
 };
 
-const transactionCreateBed = async (wardId, bedNumber, bedStatus, userId) => {
+const transactionCreateBed = async (wardId, bedNumber, bedStatus, sectionId, userId) => {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
@@ -40,7 +50,18 @@ const transactionCreateBed = async (wardId, bedNumber, bedStatus, userId) => {
       throw new Error('Ward not found');
     }
 
-    // Check if bedNumber already exists
+    // If sectionId is specified, verify it exists and belongs to this ward
+    if (sectionId) {
+      const [sectionRows] = await connection.query(
+        'SELECT id FROM section WHERE id = ? AND wardId = ?',
+        [sectionId, wardId]
+      );
+      if (sectionRows.length === 0) {
+        throw new Error('Section not found or does not belong to this ward');
+      }
+    }
+
+    // Check if bedNumber already exists in this ward
     const [existingBed] = await connection.query(
       'SELECT id FROM bed WHERE wardId = ? AND bedNumber = ?', 
       [wardId, bedNumber]
@@ -49,14 +70,21 @@ const transactionCreateBed = async (wardId, bedNumber, bedStatus, userId) => {
       throw new Error('A bed with this number already exists in this ward');
     }
 
-    // Create the bed
+    // Create the bed with optional sectionId
     const insertSql = `
-      INSERT INTO bed (wardId, bedNumber, bedStatus, createdBy, updatedBy)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO bed (wardId, bedNumber, bedStatus, sectionId, createdBy, updatedBy)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
-    const [result] = await connection.query(insertSql, [wardId, bedNumber, bedStatus, userId, userId]);
+    const [result] = await connection.query(insertSql, [
+      wardId, 
+      bedNumber, 
+      bedStatus, 
+      sectionId || null, 
+      userId, 
+      userId
+    ]);
 
-    // Update totalBeds count
+    // Update totalBeds count in ward
     await connection.query('UPDATE ward SET totalBeds = totalBeds + 1, updatedBy = ? WHERE id = ?', [userId, wardId]);
 
     await connection.commit();
@@ -75,7 +103,7 @@ const updateBedStatusById = async (id, status, userId) => {
   return result.affectedRows;
 };
 
-const transactionUpdateBed = async (id, wardId, bedNumber, bedStatus, userId) => {
+const transactionUpdateBed = async (id, wardId, bedNumber, bedStatus, sectionId, userId) => {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
@@ -90,6 +118,17 @@ const transactionUpdateBed = async (id, wardId, bedNumber, bedStatus, userId) =>
       if (wardRows.length === 0) throw new Error('New Ward not found');
     }
 
+    // If sectionId is specified, verify it exists and belongs to this ward
+    if (sectionId) {
+      const [sectionRows] = await connection.query(
+        'SELECT id FROM section WHERE id = ? AND wardId = ?',
+        [sectionId, wardId]
+      );
+      if (sectionRows.length === 0) {
+        throw new Error('Section not found or does not belong to this ward');
+      }
+    }
+
     // Check if new bedNumber conflicts
     if (wardId !== oldBed.wardId || bedNumber !== oldBed.bedNumber) {
       const [conflict] = await connection.query(
@@ -99,10 +138,10 @@ const transactionUpdateBed = async (id, wardId, bedNumber, bedStatus, userId) =>
       if (conflict.length > 0) throw new Error('A bed with this number already exists in this ward');
     }
 
-    // Update the bed
+    // Update the bed with optional sectionId
     await connection.query(
-      'UPDATE bed SET wardId = ?, bedNumber = ?, bedStatus = ?, updatedBy = ? WHERE id = ?',
-      [wardId, bedNumber, bedStatus, userId, id]
+      'UPDATE bed SET wardId = ?, bedNumber = ?, bedStatus = ?, sectionId = ?, updatedBy = ? WHERE id = ?',
+      [wardId, bedNumber, bedStatus, sectionId || null, userId, id]
     );
 
     // If ward changed, update totalBeds

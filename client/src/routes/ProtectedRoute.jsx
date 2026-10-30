@@ -9,10 +9,12 @@
 // =============================================================================
 
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = ({ allowedRoles = [], children }) => {
+  const location = useLocation();
+
   // Read authentication state from AuthContext
   const { user, isAuthenticated, isLoading } = useAuth();
 
@@ -49,9 +51,11 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
   }
 
   // Step 2.5: If user has a temporary password, force them to change it
-  // Check the sessionStorage flag or the user object flag
-  const needsPasswordChange = sessionStorage.getItem('force_password_change') === 'true' || user.isTemporaryPassword;
-  if (needsPasswordChange && window.location.pathname !== '/force-password-change') {
+  // Strictly check if the flag is 1, true, or '1' (ignore 0, '0', false, null)
+  const isTemporaryPassword = user && (user.isTemporaryPassword === 1 || user.isTemporaryPassword === true || user.isTemporaryPassword === '1');
+  const needsPasswordChange = sessionStorage.getItem('force_password_change') === 'true' || isTemporaryPassword;
+  
+  if (needsPasswordChange && location.pathname !== '/force-password-change') {
     return <Navigate to="/force-password-change" replace />;
   }
 

@@ -199,6 +199,14 @@ const AppLayout = () => {
                     <span>Manage Beds</span>
                   </NavLink>
                   <NavLink
+                    to="/ward-admin/sections"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📂</span>
+                    <span>Ward Sections</span>
+                  </NavLink>
+                  <NavLink
                     to="/ward-admin/equipment"
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}

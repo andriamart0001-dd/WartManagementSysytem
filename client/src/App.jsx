@@ -44,6 +44,7 @@ import AddBedPage from './pages/wardAdmin/forms/AddBedPage';
 import EditBedPage from './pages/wardAdmin/forms/EditBedPage';
 import AddEquipmentPage from './pages/wardAdmin/forms/AddEquipmentPage';
 import EditEquipmentPage from './pages/wardAdmin/forms/EditEquipmentPage';
+import SectionManagementPage from './pages/wardAdmin/SectionManagementPage';
 
 // 3. Staff
 import StaffDashboard from './pages/staff/StaffDashboard';
@@ -224,6 +225,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
                       <EditBedPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ward-admin/sections"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN]}>
+                      <SectionManagementPage />
                     </ProtectedRoute>
                   }
                 />

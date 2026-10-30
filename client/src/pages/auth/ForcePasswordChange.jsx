@@ -1,29 +1,35 @@
+// =============================================================================
+// ForcePasswordChange.jsx — Mandatory Temporary Password Update View
+// =============================================================================
+// Purpose:
+//   Forces staff users to change their temporary password upon first login.
+//   Once updated, clears temporary flags and routes user to their dashboard.
+// =============================================================================
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-
-// =============================================================================
-// ForcePasswordChange.jsx
-// =============================================================================
-// Purpose:
-//   Forces users to change their temporary password upon first login.
-// =============================================================================
+import { ROLE_DASHBOARDS } from '../../constants';
 
 const ForcePasswordChange = () => {
   const navigate = useNavigate();
-  const { logout, checkAuth } = useAuth();
+  const { user, logout, checkAuth, updateUser } = useAuth();
   const { addToast } = useToast();
 
+  // Form field states
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1. Validation checks
     if (!currentPassword || !newPassword || !confirmPassword) {
       setError('All fields are required.');
       return;
@@ -41,18 +47,28 @@ const ForcePasswordChange = () => {
     setError('');
 
     try {
+      // 2. Call backend API to change password
       await axiosInstance.post('/auth/change-password', {
         currentPassword,
         newPassword
       });
-      addToast('Password updated successfully! Welcome to the system.', 'success');
-      
-      // Remove temporary storage block and re-check auth to go to normal dashboard
+
+      // 3. Clear the temporary password block flag from session storage
       sessionStorage.removeItem('force_password_change');
-      await checkAuth(); // Re-fetch the user to get updated data without the flag
-      
-      // Wait a moment then redirect to root, the App logic will route correctly
-      navigate('/', { replace: true });
+
+      // 4. Update the user state immediately so ProtectedRoute won't bounce
+      updateUser({ isTemporaryPassword: 0 });
+
+      // 5. Display success notification to user
+      addToast('Password updated successfully! Welcome to the system.', 'success');
+
+      // 6. Refresh user profile in background
+      await checkAuth();
+
+      // 7. Route user to their assigned role dashboard
+      const targetDashboard = (user && user.role && ROLE_DASHBOARDS[user.role]) || '/admin';
+      navigate(targetDashboard, { replace: true });
+
     } catch (err) {
       console.error('Password change error:', err);
       setError(err.response?.data?.message || 'Failed to update password.');
@@ -61,6 +77,7 @@ const ForcePasswordChange = () => {
     }
   };
 
+  // Logout handler if user decides not to proceed
   const handleLogout = () => {
     sessionStorage.removeItem('force_password_change');
     logout();
@@ -89,6 +106,7 @@ const ForcePasswordChange = () => {
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               disabled={isSubmitting}
+              autoComplete="current-password"
             />
           </div>
 
@@ -100,6 +118,7 @@ const ForcePasswordChange = () => {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               disabled={isSubmitting}
+              autoComplete="new-password"
             />
           </div>
 
@@ -111,6 +130,7 @@ const ForcePasswordChange = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               disabled={isSubmitting}
+              autoComplete="new-password"
             />
           </div>
 
