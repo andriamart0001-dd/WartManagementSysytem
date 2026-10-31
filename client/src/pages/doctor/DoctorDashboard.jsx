@@ -94,6 +94,13 @@ const DoctorDashboard = () => {
         >
           📷 Scan Patient QR
         </button>
+        <button 
+          className="action-btn" 
+          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
+          onClick={() => navigate('/admin/patients')}
+        >
+          🗂️ Patient Directory
+        </button>
       </div>
 
       {/* Active Patient Table */}
@@ -114,6 +121,11 @@ const DoctorDashboard = () => {
               <td className="mono-data">#{adm.id}</td>
               <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                 {adm.patientName}
+                {adm.patientNIC && (
+                  <div style={{ fontSize: '11px', color: '#0369a1', fontFamily: 'monospace', fontWeight: 'normal' }}>
+                    🆔 {adm.patientNIC}
+                  </div>
+                )}
               </td>
               <td>
                 {adm.wardName}
@@ -170,4 +182,3 @@ const DoctorDashboard = () => {
 };
 
 export default DoctorDashboard;
-

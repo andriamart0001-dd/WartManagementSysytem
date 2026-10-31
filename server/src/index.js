@@ -35,6 +35,7 @@ const hospitalRoutes = require('./modules/hospital/hospitalRoutes');
 const alertRoutes = require('./modules/alert/shortageAlertRoutes');
 const sectionRoutes = require('./modules/section/sectionRoutes');
 const clinicalRequestRoutes = require('./modules/clinicalRequest/clinicalRequestRoutes');
+const patientRoutes = require('./modules/patient/patientRoutes');
 
 // Create the Express application instance
 const app = express();
@@ -110,6 +111,9 @@ app.use('/api/alerts', alertRoutes);
 
 // Clinical Request routes: /api/requests
 app.use('/api/requests', clinicalRequestRoutes);
+
+// Patient routes: /api/patients
+app.use('/api/patients', patientRoutes);
 
 // =============================================================================
 // HEALTH CHECK ROUTE

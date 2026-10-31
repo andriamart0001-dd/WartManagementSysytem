@@ -169,12 +169,28 @@ const AppLayout = () => {
                     <span>Shortage Alerts</span>
                   </NavLink>
                   <NavLink
+                    to="/admin/patients"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🗂️</span>
+                    <span>Patient Directory</span>
+                  </NavLink>
+                  <NavLink
                     to="/admin/admissions"
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}
                   >
                     <span className="nav-icon">📋</span>
                     <span>Admission History</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admin/patients"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🗂️</span>
+                    <span>Patient Directory</span>
                   </NavLink>
                 </>
               )}
@@ -222,6 +238,14 @@ const AppLayout = () => {
                     <span className="nav-icon">🚨</span>
                     <span>Shortage Alerts</span>
                   </NavLink>
+                  <NavLink
+                    to="/admin/patients"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🗂️</span>
+                    <span>Patient Directory</span>
+                  </NavLink>
                 </>
               )}
 
@@ -244,6 +268,14 @@ const AppLayout = () => {
                     <span className="nav-icon">🔍</span>
                     <span>Patient Lookup</span>
                   </NavLink>
+                  <NavLink
+                    to="/admin/patients"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🗂️</span>
+                    <span>Patient Directory</span>
+                  </NavLink>
                 </>
               )}
 
@@ -257,6 +289,14 @@ const AppLayout = () => {
                   >
                     <span className="nav-icon">🩺</span>
                     <span>My Patients</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admin/patients"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🗂️</span>
+                    <span>Patient Directory</span>
                   </NavLink>
                 </>
               )}

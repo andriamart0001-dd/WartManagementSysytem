@@ -24,7 +24,8 @@ const findAllRequests = async ({ status, requestedBy, wardId } = {}) => {
       cr.reviewNotes,
       cr.createdAt,
       cr.updatedAt,
-      pa.patientName,
+      p.fullName AS patientName,
+      p.patientNIC,
       pa.wardId,
       pa.bedId,
       w.wardName,
@@ -33,6 +34,7 @@ const findAllRequests = async ({ status, requestedBy, wardId } = {}) => {
       uRev.fullName AS reviewedByName
     FROM clinicalRequest cr
     JOIN patientAdmission pa ON cr.admissionId = pa.id
+    JOIN patient p ON pa.patientId = p.id
     JOIN ward w ON pa.wardId = w.id
     LEFT JOIN bed b ON pa.bedId = b.id
     JOIN users uReq ON cr.requestedBy = uReq.id
@@ -82,7 +84,8 @@ const findRequestById = async (id) => {
       cr.reviewNotes,
       cr.createdAt,
       cr.updatedAt,
-      pa.patientName,
+      p.fullName AS patientName,
+      p.patientNIC,
       pa.wardId,
       pa.bedId,
       pa.status AS admissionStatus,
@@ -92,6 +95,7 @@ const findRequestById = async (id) => {
       uRev.fullName AS reviewedByName
     FROM clinicalRequest cr
     JOIN patientAdmission pa ON cr.admissionId = pa.id
+    JOIN patient p ON pa.patientId = p.id
     JOIN ward w ON pa.wardId = w.id
     LEFT JOIN bed b ON pa.bedId = b.id
     JOIN users uReq ON cr.requestedBy = uReq.id

@@ -198,7 +198,7 @@ const AdmissionHistoryPage = () => {
         columns={[
           'ID',
           'Patient Name',
-          'Age / Gender',
+          'NIC / Gender',
           'Ward & Bed',
           'Admission Date',
           'Status',
@@ -234,9 +234,20 @@ const AdmissionHistoryPage = () => {
                 )}
               </td>
 
-              {/* Age / Gender */}
+              {/* NIC / Gender */}
               <td style={{ fontSize: '13px', color: '#475569' }}>
-                {admissionItem.age} yrs • {admissionItem.gender}
+                {admissionItem.isMinor ? (
+                  <span style={{ fontSize: '11px', backgroundColor: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                    Child (Minor)
+                  </span>
+                ) : (
+                  <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#0369a1' }}>
+                    {admissionItem.patientNIC || '—'}
+                  </span>
+                )}
+                <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'capitalize' }}>
+                  {admissionItem.gender}
+                </div>
               </td>
 
               {/* Ward & Bed */}
@@ -363,8 +374,16 @@ const AdmissionHistoryPage = () => {
                 </div>
               </div>
               <div>
-                <p style={{ margin: 0, fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Age & Gender</p>
-                <p style={{ margin: '4px 0 0 0', color: '#0f172a' }}>{selectedAdmission.age} yrs, {selectedAdmission.gender}</p>
+                <p style={{ margin: 0, fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>NIC / Identity</p>
+                <p style={{ margin: '4px 0 0 0', color: '#0f172a' }}>
+                  {selectedAdmission.patientNIC || (selectedAdmission.isMinor ? 'Child / Minor' : 'N/A')}
+                </p>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Blood & Gender</p>
+                <p style={{ margin: '4px 0 0 0', color: '#0f172a' }}>
+                  {selectedAdmission.bloodGroup || 'Unknown'} • {selectedAdmission.gender}
+                </p>
               </div>
               <div>
                 <p style={{ margin: 0, fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Phone</p>

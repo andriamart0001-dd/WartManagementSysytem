@@ -31,6 +31,8 @@ import DepartmentManagementPage from './pages/admin/DepartmentManagementPage';
 import HospitalManagementPage from './pages/admin/HospitalManagementPage';
 import AlertManagementPage from './pages/admin/AlertManagementPage';
 import AdmissionHistoryPage from './pages/admin/AdmissionHistoryPage';
+import PatientManagementPage from './pages/admin/PatientManagementPage';
+import PatientRegistrationPage from './pages/staff/PatientRegistrationPage';
 import AddUserPage from './pages/admin/forms/AddUserPage';
 import EditUserPage from './pages/admin/forms/EditUserPage';
 import AddWardPage from './pages/admin/forms/AddWardPage';
@@ -194,6 +196,14 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="/admin/patients"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR]}>
+                      <PatientManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
 
                 {/* 2. Ward Admin Role Dashboard & Pages */}
                 <Route
@@ -283,6 +293,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
                       <AdmitPatientPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/staff/patients/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
+                      <PatientRegistrationPage />
                     </ProtectedRoute>
                   }
                 />

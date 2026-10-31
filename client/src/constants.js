@@ -62,6 +62,9 @@ export const ADMISSION_STATUS = {
 // Patient gender constants
 export const GENDER = ['male', 'female', 'other'];
 
+// Blood group options
+export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
+
 // Equipment status constants
 export const EQUIPMENT_STATUS = {
   AVAILABLE: 'available',
