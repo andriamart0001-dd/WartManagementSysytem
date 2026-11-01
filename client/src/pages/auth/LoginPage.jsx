@@ -3,7 +3,7 @@
 // =============================================================================
 // Purpose:
 //   Provides a clean, secure authentication form for hospital staff members.
-//   Supports login for Admin, Ward Admin, Staff, and Doctor accounts.
+//   Supports login for Admin, Ward Admin, Admission Doctor, Staff Nurse, and Medical Doctor accounts.
 //
 // Rules Enforced (GEMINI.md & Requirements):
 //   - STRICTLY NO patient login, patient registration, or forgot password links.
@@ -128,7 +128,6 @@ const LoginPage = () => {
     setApiError('');
   };
 
-
   return (
     <div className="login-container">
       <div className="login-card">
@@ -241,22 +240,33 @@ const LoginPage = () => {
 
             <button
               type="button"
-              className="quick-btn btn-staff"
-              onClick={() => handleQuickLogin('staff@hospital.com', 'Staff@1234')}
+              className="quick-btn btn-admission-doctor"
+              onClick={() => handleQuickLogin('admissiondoctor@hospital.com', 'Doctor@1234')}
               disabled={isSubmitting}
             >
-              <span className="quick-role-title">📋 Staff Nurse</span>
-              <span className="quick-access-desc">Patient Ops (/staff)</span>
+              <span className="quick-role-title">🩺 Admission Doctor</span>
+              <span className="quick-access-desc">Admit & Register (/admission-doctor)</span>
+            </button>
+
+            <button
+              type="button"
+              className="quick-btn btn-staff"
+              onClick={() => handleQuickLogin('nurse@hospital.com', 'Nurse@1234')}
+              disabled={isSubmitting}
+            >
+              <span className="quick-role-title">👩‍⚕️ Staff Nurse</span>
+              <span className="quick-access-desc">Nurse Ops (/nurse)</span>
             </button>
 
             <button
               type="button"
               className="quick-btn btn-doctor"
+              style={{ gridColumn: 'span 2' }}
               onClick={() => handleQuickLogin('doctor@hospital.com', 'Doctor@1234')}
               disabled={isSubmitting}
             >
-              <span className="quick-role-title">🩺 Doctor</span>
-              <span className="quick-access-desc">Medical Portal (/doctor)</span>
+              <span className="quick-role-title">🩺 Medical Doctor</span>
+              <span className="quick-access-desc">Medical Portal & Discharge (/doctor)</span>
             </button>
           </div>
         </div>
@@ -273,4 +283,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
