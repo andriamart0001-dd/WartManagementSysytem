@@ -33,7 +33,7 @@ router.get('/:id',
 // POST /api/admissions - Admit a new patient (Admin, WardAdmin, AdmissionDoctor, Nurse)
 router.post('/', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR), 
   admissionController.createAdmission
 );
 

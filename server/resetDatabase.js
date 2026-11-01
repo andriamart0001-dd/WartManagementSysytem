@@ -1,5 +1,5 @@
 // =============================================================================
-// resetDatabase.js — Complete Database Reset & Seeding Script
+// resetDatabase.js — Complete Database Reset & Comprehensive Seeding Script
 // =============================================================================
 // PURPOSE:
 //   1. Drops all existing tables in the database.
@@ -7,16 +7,19 @@
 //   3. Seeds comprehensive, realistic hospital demo data for all 4 roles:
 //      - Users (Admin, Ward Admin, Staff Nurse, Admission Doctor, Doctor)
 //      - Departments & Wards
+//      - Staff Ward Assignments
 //      - Sections & Beds (available, occupied, maintenance)
-//      - Patients (adults & minors with NIC, guardian info, blood group)
+//      - Master Patients (adults & minors with NIC, guardian info, blood group)
 //      - Active Admissions & Discharged Records with QR Codes
 //      - Patient Vitals (BP, Pulse, Temperature)
+//      - Internal Ward Transfer Logs
+//      - External Hospitals & Transfer Logs
+//      - Clinical Requests (Pending & Approved Discharges)
 //      - Medical Equipment & Maintenance Logs
-//      - External Hospitals for Transfers
-//      - Staff Ward Assignments
+//      - Shortage Alert Logs
 // =============================================================================
 
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
@@ -443,8 +446,54 @@ async function runReset() {
       );
     }
 
-    // 4.10 Seed Medical Equipment
-    console.log('  -> Inserting ward equipment & inventory...');
+    // 4.10 Seed Internal Ward Transfer Log
+    console.log('  -> Inserting internal ward transfer logs...');
+    await connection.query(
+      `INSERT INTO wardTransfer (admissionId, fromWardId, toWardId, fromBedId, toBedId, transferReason, transferredBy, transferDate, createdBy, updatedBy)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        admissionIds[0],
+        wardIds['General Ward A'],
+        wardIds['General Ward A'],
+        bedIds['GA-04'],
+        bedIds['GA-01'],
+        'Moved closer to nursing station for closer monitoring during fluid therapy.',
+        nurseId,
+        formatDate(now),
+        adminId,
+        adminId
+      ]
+    );
+
+    // 4.11 Seed External Hospitals & External Transfer Log
+    console.log('  -> Inserting external hospital reference list & transfer history...');
+    const hospitals = [
+      { name: 'National Hospital of Sri Lanka (NHSL)', address: 'Regent Street, Colombo 10', phone: '0112691111' },
+      { name: 'Teaching Hospital Karapitiya', address: 'Karapitiya, Galle', phone: '0912232250' },
+      { name: 'National Hospital Kandy', address: 'William Gopallawa Mawatha, Kandy', phone: '0812222261' },
+      { name: 'Sri Jayewardenepura General Hospital', address: 'Thalapathpitiya, Nugegoda', phone: '0112778610' }
+    ];
+
+    const hospitalIds = [];
+    for (const h of hospitals) {
+      const [res] = await connection.query(
+        `INSERT INTO hospital (hospitalName, address, contactNumber, createdBy, updatedBy)
+         VALUES (?, ?, ?, ?, ?)`,
+        [h.name, h.address, h.phone, adminId, adminId]
+      );
+      hospitalIds.push(res.insertId);
+    }
+
+    // 4.12 Seed Clinical Requests (Discharge Requests)
+    console.log('  -> Inserting clinical workflow requests (discharge reviews)...');
+    await connection.query(
+      `INSERT INTO clinicalRequest (admissionId, requestType, requestStatus, requestedBy, requestNotes, reviewedBy, reviewedAt, reviewNotes, createdBy, updatedBy)
+       VALUES (?, 'discharge', 'pending', ?, 'Patient is clinically stable. Wound healing cleanly. Requesting discharge clearance.', NULL, NULL, NULL, ?, ?)`,
+      [admissionIds[1], doctorId, adminId, adminId]
+    );
+
+    // 4.13 Seed Medical Equipment & Maintenance Logs
+    console.log('  -> Inserting ward equipment & maintenance history...');
     const equipmentList = [
       { name: 'Infusion Pump', qty: 5, status: 'inUse', threshold: 2, ward: 'General Ward A' },
       { name: 'Patient Monitor (Multipara)', qty: 6, status: 'inUse', threshold: 3, ward: 'General Ward A' },
@@ -457,30 +506,37 @@ async function runReset() {
       { name: 'Phototherapy Unit', qty: 2, status: 'available', threshold: 1, ward: 'Pediatric Care Ward' }
     ];
 
+    const equipIds = [];
     for (const eq of equipmentList) {
-      await connection.query(
+      const [res] = await connection.query(
         `INSERT INTO equipment (equipmentName, quantity, status, minQuantityThreshold, wardId, createdBy, updatedBy)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [eq.name, eq.qty, eq.status, eq.threshold, wardIds[eq.ward], adminId, adminId]
       );
+      equipIds.push(res.insertId);
     }
 
-    // 4.11 Seed External Hospitals for Transfers
-    console.log('  -> Inserting external hospital reference list...');
-    const hospitals = [
-      { name: 'National Hospital of Sri Lanka (NHSL)', address: 'Regent Street, Colombo 10', phone: '0112691111' },
-      { name: 'Teaching Hospital Karapitiya', address: 'Karapitiya, Galle', phone: '0912232250' },
-      { name: 'National Hospital Kandy', address: 'William Gopallawa Mawatha, Kandy', phone: '0812222261' },
-      { name: 'Sri Jayewardenepura General Hospital', address: 'Thalapathpitiya, Nugegoda', phone: '0112778610' }
-    ];
+    // Equipment maintenance log
+    await connection.query(
+      `INSERT INTO equipmentMaintenanceLog (equipmentId, maintenanceDate, performedBy, notes, nextScheduledDate, createdBy, updatedBy)
+       VALUES (?, ?, ?, 'Routine calibration and sensor check completed.', ?, ?, ?)`,
+      [
+        equipIds[0],
+        formatDate(fiveDaysAgo),
+        adminId,
+        formatDate(new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)),
+        adminId,
+        adminId
+      ]
+    );
 
-    for (const h of hospitals) {
-      await connection.query(
-        `INSERT INTO hospital (hospitalName, address, contactNumber, createdBy, updatedBy)
-         VALUES (?, ?, ?, ?, ?)`,
-        [h.name, h.address, h.phone, adminId, adminId]
-      );
-    }
+    // 4.14 Seed Historical Shortage Alert Log
+    console.log('  -> Inserting shortage alert history...');
+    await connection.query(
+      `INSERT INTO shortageAlertLog (wardId, equipmentId, alertType, triggeredAt, resolvedAt, createdBy, updatedBy)
+       VALUES (?, NULL, 'bedShortage', ?, ?, ?, ?)`,
+      [wardIds['General Ward A'], formatDate(tenDaysAgo), formatDate(eightDaysAgo), adminId, adminId]
+    );
 
     console.log('\n========================================================');
     console.log('🎉 Full Database Reset & Fresh Data Seeding Complete!');

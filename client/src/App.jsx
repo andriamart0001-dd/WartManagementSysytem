@@ -48,7 +48,13 @@ import AddEquipmentPage from './pages/wardAdmin/forms/AddEquipmentPage';
 import EditEquipmentPage from './pages/wardAdmin/forms/EditEquipmentPage';
 import SectionManagementPage from './pages/wardAdmin/SectionManagementPage';
 
-// 3. Staff
+// 3. Admission Doctor
+import AdmissionDoctorDashboard from './pages/admissionDoctor/AdmissionDoctorDashboard';
+
+// 4. Staff Nurse
+import NurseDashboard from './pages/nurse/NurseDashboard';
+
+// 5. Shared Operations Pages (Staff / Doctor / Nurse)
 import StaffDashboard from './pages/staff/StaffDashboard';
 import PatientLookupPage from './pages/staff/PatientLookupPage';
 import AdmitPatientPage from './pages/staff/AdmitPatientPage';
@@ -57,7 +63,7 @@ import ExternalTransferPage from './pages/staff/ExternalTransferPage';
 import ReturnPatientPage from './pages/staff/ReturnPatientPage';
 import LogVitalsPage from './pages/staff/LogVitalsPage';
 
-// 4. Doctor
+// 6. Doctor
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import PatientDetailPage from './pages/doctor/PatientDetailPage';
 import DischargePage from './pages/doctor/DischargePage';
@@ -271,7 +277,123 @@ function App() {
                   }
                 />
 
-                {/* 3. Staff Role Dashboard & Pages */}
+                {/* 3. Admission Doctor Dedicated Routes */}
+                <Route
+                  path="/admission-doctor"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR]}>
+                      <AdmissionDoctorDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admission-doctor/lookup"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR]}>
+                      <PatientLookupPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admission-doctor/admit"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR]}>
+                      <AdmitPatientPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admission-doctor/patients/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR]}>
+                      <PatientRegistrationPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admission-doctor/transfers/internal/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR]}>
+                      <InternalTransferPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admission-doctor/transfers/external/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR]}>
+                      <ExternalTransferPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admission-doctor/transfers/external/return"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR]}>
+                      <ReturnPatientPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admission-doctor/vitals/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR]}>
+                      <LogVitalsPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* 4. Staff Nurse Dedicated Routes */}
+                <Route
+                  path="/nurse"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.NURSE]}>
+                      <NurseDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/nurse/lookup"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.NURSE]}>
+                      <PatientLookupPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/nurse/transfers/internal/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.NURSE]}>
+                      <InternalTransferPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/nurse/transfers/external/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.NURSE]}>
+                      <ExternalTransferPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/nurse/transfers/external/return"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.NURSE]}>
+                      <ReturnPatientPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/nurse/vitals/new"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.NURSE]}>
+                      <LogVitalsPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* 5. Legacy /staff Routes (Preserved for compatibility, with Nurse removed from Admit & Register) */}
                 <Route
                   path="/staff"
                   element={
@@ -283,7 +405,7 @@ function App() {
                 <Route
                   path="/staff/lookup"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR]}>
                       <PatientLookupPage />
                     </ProtectedRoute>
                   }
@@ -291,7 +413,7 @@ function App() {
                 <Route
                   path="/staff/admit"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR]}>
                       <AdmitPatientPage />
                     </ProtectedRoute>
                   }
@@ -299,7 +421,7 @@ function App() {
                 <Route
                   path="/staff/patients/new"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR]}>
                       <PatientRegistrationPage />
                     </ProtectedRoute>
                   }
@@ -331,13 +453,13 @@ function App() {
                 <Route
                   path="/staff/vitals/new"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR]}>
                       <LogVitalsPage />
                     </ProtectedRoute>
                   }
                 />
 
-                {/* 4. Doctor Role Dashboard & Pages */}
+                {/* 6. Doctor Role Dashboard & Pages */}
                 <Route
                   path="/doctor"
                   element={

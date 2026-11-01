@@ -37,7 +37,7 @@ router.get('/:id/history', authenticateJWT, authorizeRoles(...ALL_STAFF_ROLES), 
 router.post(
   '/',
   authenticateJWT,
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE),
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR),
   patientController.registerPatient
 );
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ROLES } from '../../constants';
 import FormField from '../../components/ui/FormField';
 import FormPageLayout from '../../components/ui/FormPageLayout';
 import QRPrintModal from '../../components/ui/QRPrintModal';
@@ -25,7 +27,9 @@ const AdmitPatientPage = () => {
   const [searchParams] = useSearchParams();
   const preSelectedPatientId = searchParams.get('patientId');
 
+  const { user } = useAuth();
   const { addToast } = useToast();
+  const defaultDashboard = user?.role === ROLES.ADMISSION_DOCTOR ? '/admission-doctor' : '/staff';
 
   // Selected Patient State
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -198,7 +202,7 @@ const AdmitPatientPage = () => {
           admissionDate: new Date(newAdmission.admissionDate || new Date()).toLocaleDateString()
         });
       } else {
-        navigate('/staff');
+        navigate(defaultDashboard);
       }
     } catch (err) {
       console.error('Admit error:', err);
@@ -210,7 +214,7 @@ const AdmitPatientPage = () => {
 
   const handleQRModalClose = () => {
     setQrModalData(null);
-    navigate('/staff');
+    navigate(defaultDashboard);
   };
 
   const wardOptions = wards.map((w) => ({
@@ -232,7 +236,7 @@ const AdmitPatientPage = () => {
         title="Admit Patient"
         subtitle="Verify patient identity using NIC auto-fill, then assign to a ward."
         icon="📋"
-        backTo="/staff"
+        backTo={defaultDashboard}
         backLabel="Back to Dashboard"
       >
         {/* =================================================================== */}
