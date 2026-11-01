@@ -148,9 +148,9 @@ const BedManagementPage = () => {
                 width: '64px', height: '64px', borderRadius: '8px', border: '2px solid',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: 'bold', fontSize: '14px', cursor: 'pointer',
-                ...getBedSquareStyle(bed.status)
+                ...getBedSquareStyle(bed.bedStatus || bed.status)
               }}
-              title={`Bed ${bed.bedNumber} - ${bed.status}`}
+              title={`Bed ${bed.bedNumber}${bed.sectionName ? ` (${bed.sectionName})` : ''} - ${bed.bedStatus || bed.status}`}
             >
               {bed.bedNumber}
             </div>
@@ -161,13 +161,13 @@ const BedManagementPage = () => {
       {/* Data Table View */}
       <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: '#0f172a' }}>Bed Details</h3>
       <DataTable 
-        columns={['Bed Number', 'Ward', 'Status', 'Actions']} 
+        columns={['Bed Number', 'Ward', 'Section', 'Status', 'Actions']} 
         isEmpty={!isLoading && filteredBeds.length === 0}
         emptyMessage="No beds found."
       >
         {isLoading ? (
           <tr>
-            <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>Loading beds...</td>
+            <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>Loading beds...</td>
           </tr>
         ) : (
           filteredBeds.map((bed) => (
@@ -175,7 +175,12 @@ const BedManagementPage = () => {
               <td style={{ fontWeight: 600 }}>{bed.bedNumber}</td>
               <td>{getDeptName(bed.wardId)}</td>
               <td>
-                <StatusBadge status={bed.status} />
+                <span style={{ color: bed.sectionName ? '#0f172a' : '#94a3b8', fontStyle: bed.sectionName ? 'normal' : 'italic' }}>
+                  {bed.sectionName || 'None'}
+                </span>
+              </td>
+              <td>
+                <StatusBadge status={bed.bedStatus || bed.status} />
               </td>
               <td>
                 <div className="table-actions">

@@ -151,6 +151,18 @@ const AdminDashboard = () => {
             </p>
           </div>
         </Link>
+
+        <Link to="/admin/patients" style={{ textDecoration: 'none' }}>
+          <div className="dash-card" style={{ cursor: 'pointer' }}>
+            <div className="card-header">
+              <span className="card-icon">🗂️</span>
+              <h3>Patient Directory</h3>
+            </div>
+            <p className="card-description">
+              Browse permanent patient profiles, search by NIC, and view admission histories.
+            </p>
+          </div>
+        </Link>
       </div>
 
     </div>

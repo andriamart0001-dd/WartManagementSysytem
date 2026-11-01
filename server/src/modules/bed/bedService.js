@@ -10,13 +10,19 @@ const getBeds = async (wardId) => {
 };
 
 const createBed = async (bedData, userId) => {
-  const { wardId, bedNumber } = bedData;
+  const { wardId, bedNumber, sectionId } = bedData;
 
   if (!wardId || !bedNumber) {
     throw new Error('wardId and bedNumber are required');
   }
 
-  const newId = await bedModel.transactionCreateBed(wardId, bedNumber, BED_STATUS.AVAILABLE, userId);
+  const newId = await bedModel.transactionCreateBed(
+    wardId, 
+    bedNumber, 
+    BED_STATUS.AVAILABLE, 
+    sectionId || null, 
+    userId
+  );
   return await bedModel.findBedById(newId);
 };
 
@@ -38,7 +44,7 @@ const updateBedStatus = async (id, status, userId) => {
 };
 
 const updateBed = async (id, bedData, userId) => {
-  const { wardId, bedNumber, bedStatus } = bedData;
+  const { wardId, bedNumber, bedStatus, sectionId } = bedData;
 
   if (!wardId || !bedNumber || !bedStatus) {
     throw new Error('wardId, bedNumber, and bedStatus are required');
@@ -48,7 +54,14 @@ const updateBed = async (id, bedData, userId) => {
     throw new Error(`Invalid status. Allowed: ${Object.values(BED_STATUS).join(', ')}`);
   }
 
-  await bedModel.transactionUpdateBed(id, wardId, bedNumber, bedStatus, userId);
+  await bedModel.transactionUpdateBed(
+    id, 
+    wardId, 
+    bedNumber, 
+    bedStatus, 
+    sectionId !== undefined ? sectionId : null, 
+    userId
+  );
   return await bedModel.findBedById(id);
 };
 

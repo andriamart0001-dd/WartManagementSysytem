@@ -10,6 +10,7 @@ import FormPageLayout from '../../../components/ui/FormPageLayout';
 // =============================================================================
 // Purpose:
 //   Ward Admin interface to add a new bed to a ward.
+//   Supports assigning the bed to an optional Ward Section.
 //   Route: GET /ward-admin/beds/new
 // =============================================================================
 
@@ -17,32 +18,43 @@ const AddBedPage = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const [formData, setFormData] = useState({ bedNumber: '', wardId: '' });
+  const [formData, setFormData] = useState({ bedNumber: '', wardId: '', sectionId: '' });
   const [wards, setWards] = useState([]);
+  const [sections, setSections] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchWards = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axiosInstance.get('/wards');
-        const wardList = Array.isArray(response.data.wards) 
-          ? response.data.wards 
-          : (Array.isArray(response.data) ? response.data : []);
+        const [wardsRes, sectionsRes] = await Promise.all([
+          axiosInstance.get('/wards'),
+          axiosInstance.get('/sections')
+        ]);
+
+        const wardList = Array.isArray(wardsRes.data.wards) 
+          ? wardsRes.data.wards 
+          : (Array.isArray(wardsRes.data) ? wardsRes.data : []);
+
+        const sectionList = Array.isArray(sectionsRes.data.sections)
+          ? sectionsRes.data.sections
+          : (Array.isArray(sectionsRes.data) ? sectionsRes.data : []);
+
         setWards(wardList);
+        setSections(sectionList);
         
         if (wardList.length > 0) {
           setFormData(prev => ({ ...prev, wardId: wardList[0].id.toString() }));
         }
       } catch (err) {
-        console.error('Error fetching wards:', err);
-        setError('Failed to load wards');
+        console.error('Error fetching wards and sections:', err);
+        setError('Failed to load wards and sections');
       } finally {
         setIsLoading(false);
       }
     };
-    fetchWards();
+    fetchData();
   }, []);
 
   const wardOptions = wards.map(w => ({ 
@@ -50,9 +62,27 @@ const AddBedPage = () => {
     label: w.wardName || w.name 
   }));
 
+  // Available sections for the currently selected ward
+  const availableSections = sections.filter(
+    s => s.wardId && s.wardId.toString() === formData.wardId.toString()
+  );
+
+  const sectionOptions = [
+    { value: '', label: '-- None (No Section) --' },
+    ...availableSections.map(s => ({
+      value: s.id.toString(),
+      label: s.sectionName
+    }))
+  ];
+
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    // If ward changes, reset sectionId
+    if (id === 'wardId') {
+      setFormData(prev => ({ ...prev, wardId: value, sectionId: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, [id]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -67,8 +97,9 @@ const AddBedPage = () => {
 
     try {
       const payload = { 
-        bedNumber: formData.bedNumber, 
-        wardId: parseInt(formData.wardId, 10) 
+        bedNumber: formData.bedNumber.trim(), 
+        wardId: parseInt(formData.wardId, 10),
+        sectionId: formData.sectionId ? parseInt(formData.sectionId, 10) : null
       };
       await axiosInstance.post('/beds', payload);
       addToast('Bed created successfully', 'success');
@@ -92,7 +123,7 @@ const AddBedPage = () => {
   return (
     <FormPageLayout
       title="Add New Bed"
-      subtitle="Register a new bed in a specific ward."
+      subtitle="Register a new bed in a specific ward and optional section."
       icon="🛏️"
       backTo="/ward-admin/beds"
       backLabel="Back to Beds"
@@ -112,6 +143,7 @@ const AddBedPage = () => {
           required 
           disabled={isSubmitting}
         />
+
         <FormField 
           id="wardId" 
           type="select" 
@@ -120,6 +152,16 @@ const AddBedPage = () => {
           onChange={handleChange} 
           options={wardOptions}
           required
+          disabled={isSubmitting}
+        />
+
+        <FormField 
+          id="sectionId" 
+          type="select" 
+          label="Assigned Section (Optional)" 
+          value={formData.sectionId} 
+          onChange={handleChange} 
+          options={sectionOptions}
           disabled={isSubmitting}
         />
 

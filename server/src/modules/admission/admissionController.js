@@ -4,6 +4,7 @@
 
 const admissionService = require('./admissionService');
 
+// Retrieve all active admissions
 const getAdmissions = async (req, res) => {
   try {
     const admissions = await admissionService.getActiveAdmissions();
@@ -18,6 +19,7 @@ const getAdmissions = async (req, res) => {
   }
 };
 
+// Retrieve single admission by ID
 const getAdmissionById = async (req, res) => {
   try {
     const admission = await admissionService.getAdmissionById(req.params.id);
@@ -26,7 +28,7 @@ const getAdmissionById = async (req, res) => {
       admission
     });
   } catch (error) {
-    if (error.message === 'Admission record not found') {
+    if (error.message.includes('not found')) {
       return res.status(404).json({ message: error.message });
     }
     console.error('Get admission by id error:', error);
@@ -34,6 +36,7 @@ const getAdmissionById = async (req, res) => {
   }
 };
 
+// Admit a patient to a ward and bed
 const createAdmission = async (req, res) => {
   try {
     const admission = await admissionService.createAdmission(req.body, req.user.id);
@@ -42,11 +45,13 @@ const createAdmission = async (req, res) => {
       admission
     });
   } catch (error) {
-    if (error.message === 'Bed not found') return res.status(404).json({ message: error.message });
+    if (error.message.includes('not found')) {
+      return res.status(404).json({ message: error.message });
+    }
     if (
       error.message.includes('required') || 
-      error.message.includes('Invalid gender') ||
-      error.message.includes('bed is not available')
+      error.message.includes('already admitted') ||
+      error.message.includes('not available')
     ) {
       return res.status(400).json({ message: error.message });
     }
@@ -55,6 +60,7 @@ const createAdmission = async (req, res) => {
   }
 };
 
+// Discharge a patient
 const dischargePatient = async (req, res) => {
   try {
     const admission = await admissionService.dischargePatient(req.params.id, req.body.dischargeNotes, req.user.id);
@@ -63,14 +69,19 @@ const dischargePatient = async (req, res) => {
       admission
     });
   } catch (error) {
-    if (error.message === 'Admission record not found') return res.status(404).json({ message: error.message });
-    if (error.message.includes('already discharged')) return res.status(400).json({ message: error.message });
+    if (error.message.includes('not found')) {
+      return res.status(404).json({ message: error.message });
+    }
+    if (error.message.includes('already discharged')) {
+      return res.status(400).json({ message: error.message });
+    }
     
     console.error('Discharge patient error:', error);
     return res.status(500).json({ message: 'Error discharging patient' });
   }
 };
 
+// Get admissions history with optional search
 const getAllAdmissions = async (req, res) => {
   try {
     const { status, search } = req.query;

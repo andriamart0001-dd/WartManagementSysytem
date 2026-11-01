@@ -20,11 +20,12 @@ const getPasswordHashById = async (userId) => {
   return rows.length > 0 ? rows[0].passwordHash : null;
 };
 
-// Update a user's password and remove temporary flag
+// Update a user's password and clear the temporary password flag (set to 0)
 const updatePassword = async (userId, newHashedPassword) => {
+  // Clear isTemporaryPassword to 0 so the user is not prompted again
   const sql = `
     UPDATE users 
-    SET passwordHash = ?, isTemporaryPassword = false, updatedBy = ? 
+    SET passwordHash = ?, isTemporaryPassword = 0, updatedBy = ? 
     WHERE id = ?
   `;
   await db.query(sql, [newHashedPassword, userId, userId]);

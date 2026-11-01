@@ -98,6 +98,10 @@ const StaffDashboard = () => {
         <button className="action-btn" style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} onClick={() => navigate('/staff/vitals/new')}>
           🩸 Log Vitals
         </button>
+        <button className="action-btn" style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} onClick={() => navigate('/admin/patients')}>
+          🗂️ Patient Directory
+          🩸 Log Vitals
+        </button>
       </div>
 
       {/* Active Patients Table */}
@@ -115,7 +119,14 @@ const StaffDashboard = () => {
           (Array.isArray(admissions) ? admissions : []).map((adm) => (
             <tr key={adm.id}>
               <td className="mono-data">#{adm.id}</td>
-              <td style={{ fontWeight: 600 }}>{adm.patientName}</td>
+              <td style={{ fontWeight: 600 }}>
+                {adm.patientName}
+                {adm.patientNIC && (
+                  <div style={{ fontSize: '11px', color: '#0369a1', fontFamily: 'monospace', fontWeight: 'normal' }}>
+                    🆔 {adm.patientNIC}
+                  </div>
+                )}
+              </td>
               <td>{adm.wardName} {adm.bedNumber ? `(Bed ${adm.bedNumber})` : ''}</td>
               <td>{new Date(adm.admissionDate).toLocaleDateString()}</td>
               <td>

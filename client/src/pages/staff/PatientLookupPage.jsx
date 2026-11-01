@@ -61,7 +61,7 @@ const PatientLookupPage = () => {
       if (searchMode === 'ID') {
         // Find a single admission by its exact ID
         await searchById(searchValue.trim());
-      } else if (searchMode === 'NAME') {
+      } else if (searchMode === 'NIC' || searchMode === 'NAME') {
         // Find admissions matching the patient name
         await searchByName(searchValue.trim());
       } else if (searchMode === 'QR') {
@@ -197,6 +197,13 @@ const PatientLookupPage = () => {
           <button 
             type="button"
             style={searchMode === 'NAME' ? styles.activeTab : styles.tab} 
+            onClick={() => { setSearchMode('NIC'); setSearchValue(''); }}
+          >
+            Search by NIC
+          </button>
+          <button 
+            type="button"
+            style={searchMode === 'NAME' ? styles.activeTab : styles.tab} 
             onClick={() => { setSearchMode('NAME'); setSearchValue(''); }}
           >
             Search by Name
@@ -227,7 +234,13 @@ const PatientLookupPage = () => {
             <input
               type={searchMode === 'ID' ? 'number' : 'text'}
               style={styles.searchInput}
-              placeholder={searchMode === 'ID' ? 'Enter Admission ID (e.g. 1)' : 'Enter Patient Name'}
+              placeholder={
+                searchMode === 'ID' 
+                  ? 'Enter Admission ID (e.g. 1)' 
+                  : searchMode === 'NIC' 
+                  ? 'Enter Patient NIC (e.g. 199512345678)' 
+                  : 'Enter Patient Name'
+              }
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               autoFocus
@@ -253,7 +266,14 @@ const PatientLookupPage = () => {
         {searchResults.map((adm) => (
           <tr key={adm.id}>
             <td className="mono-data">#{adm.id}</td>
-            <td style={{ fontWeight: 600 }}>{adm.patientName}</td>
+            <td style={{ fontWeight: 600 }}>
+              {adm.patientName}
+              {adm.patientNIC && (
+                <div style={{ fontSize: '11px', color: '#0369a1', fontFamily: 'monospace', fontWeight: 'normal' }}>
+                  🆔 {adm.patientNIC}
+                </div>
+              )}
+            </td>
             <td>{adm.wardName} {adm.bedNumber ? `(Bed ${adm.bedNumber})` : ''}</td>
             <td>{new Date(adm.admissionDate).toLocaleDateString()}</td>
             <td>

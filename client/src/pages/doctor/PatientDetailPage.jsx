@@ -146,7 +146,19 @@ const PatientDetailPage = () => {
         gap: '20px'
       }}>
         <InfoField label="Full Name" value={admission.patientName} />
-        <InfoField label="Age" value={`${admission.age} years`} />
+        <InfoField 
+          label="NIC / Identity" 
+          value={
+            admission.isMinor 
+              ? `Minor (Guardian: ${admission.guardianName || 'N/A'} - ${admission.guardianNIC || 'N/A'})` 
+              : (admission.patientNIC || 'N/A')
+          } 
+        />
+        <InfoField 
+          label="Date of Birth" 
+          value={admission.dateOfBirth ? new Date(admission.dateOfBirth).toLocaleDateString() : 'N/A'} 
+        />
+        <InfoField label="Blood Group" value={admission.bloodGroup || 'Unknown'} />
         <InfoField label="Gender" value={admission.gender} />
         <InfoField label="Contact" value={admission.contactNumber || 'N/A'} />
         <InfoField label="Ward" value={admission.wardName} />

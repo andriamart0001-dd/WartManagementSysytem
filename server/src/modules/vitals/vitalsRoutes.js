@@ -27,19 +27,19 @@ const { ROLES } = require('../../constants');
 router.post(
   '/',
   authenticateJWT,
-  authorizeRoles(ROLES.DOCTOR, ROLES.STAFF, ROLES.WARD_ADMIN),
+  authorizeRoles(ROLES.DOCTOR, ROLES.NURSE, ROLES.ADMISSION_DOCTOR, ROLES.WARD_ADMIN, ROLES.ADMIN),
   logVitals
 );
 
 // =============================================================================
 // ROUTE: GET /api/admissions/:id/vitals
 // Purpose: Retrieve the full vitals history for an admission record
-// Access: Doctors, Ward Admins, and Staff can view vitals
+// Access: Doctors, Ward Admins, Admission Doctors, Nurses, and Admins can view vitals
 // =============================================================================
 router.get(
   '/',
   authenticateJWT,
-  authorizeRoles(ROLES.DOCTOR, ROLES.STAFF, ROLES.WARD_ADMIN, ROLES.ADMIN),
+  authorizeRoles(ROLES.DOCTOR, ROLES.NURSE, ROLES.ADMISSION_DOCTOR, ROLES.WARD_ADMIN, ROLES.ADMIN),
   getVitals
 );
 

@@ -23,6 +23,73 @@ export const ROLE_DASHBOARDS = {
   [ROLES.DOCTOR]: '/doctor'
 };
 
+// Bed status constants
+export const BED_STATUS = {
+  AVAILABLE: 'available',
+  OCCUPIED: 'occupied',
+  MAINTENANCE: 'maintenance'
+};
+
+// User account status values
+export const USER_STATUS = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive'
+};
+
+// Ward status constants
+export const WARD_STATUS = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive'
+};
+
+// Ward type constants
+export const WARD_TYPES = [
+  'General',
+  'ICU',
+  'Maternity',
+  'Pediatric',
+  'Surgical',
+  'Emergency'
+];
+
+// Patient admission status constants
+export const ADMISSION_STATUS = {
+  ADMITTED: 'admitted',
+  DISCHARGED: 'discharged',
+  TRANSFERRED_OUT: 'transferredOut'
+};
+
+// Patient gender constants
+export const GENDER = ['male', 'female', 'other'];
+
+// Blood group options
+export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
+
+// Equipment status constants
+export const EQUIPMENT_STATUS = {
+  AVAILABLE: 'available',
+  IN_USE: 'inUse',
+  MAINTENANCE: 'maintenance'
+};
+
+// Alert type constants for shortage logs
+export const ALERT_TYPES = {
+  BED_SHORTAGE: 'bedShortage',
+  EQUIPMENT_SHORTAGE: 'equipmentShortage'
+};
+
+// Clinical request status constants
+export const REQUEST_STATUS = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected'
+};
+
+// Clinical request type constants
+export const REQUEST_TYPE = {
+  DISCHARGE: 'discharge'
+};
+
 // Local storage keys for session persistence
 export const STORAGE_KEYS = {
   TOKEN: 'ward_system_token',

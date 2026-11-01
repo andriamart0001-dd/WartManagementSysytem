@@ -10,6 +10,7 @@ const getDashboardSummary = async () => {
   await shortageAlertService.syncShortages();
 
   const totalActiveAdmissions = await dashboardModel.countActiveAdmissions();
+  const totalPatients = await dashboardModel.countTotalPatients();
   const totalUsers = await dashboardModel.countTotalUsers();
   const totalWards = await dashboardModel.countTotalWards();
   const bedStats = await dashboardModel.getBedStats();
@@ -19,6 +20,7 @@ const getDashboardSummary = async () => {
   return {
     totalUsers,
     totalWards,
+    totalPatients,
     totalActiveAdmissions,
     bedStats: {
       available: parseInt(bedStats.availableBeds) || 0,

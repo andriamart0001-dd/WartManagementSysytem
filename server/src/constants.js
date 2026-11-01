@@ -61,6 +61,18 @@ const ALERT_TYPES = {
   EQUIPMENT_SHORTAGE: 'equipmentShortage'
 };
 
+// Clinical request status constants
+const REQUEST_STATUS = {
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected'
+};
+
+// Clinical request type constants
+const REQUEST_TYPE = {
+  DISCHARGE: 'discharge'
+};
+
 // Export so other files can import these constants
 module.exports = {
   ROLES,
@@ -71,5 +83,7 @@ module.exports = {
   ADMISSION_STATUS,
   GENDER,
   EQUIPMENT_STATUS,
-  ALERT_TYPES
+  ALERT_TYPES,
+  REQUEST_STATUS,
+  REQUEST_TYPE
 };

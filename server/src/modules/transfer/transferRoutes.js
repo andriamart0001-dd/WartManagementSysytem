@@ -10,7 +10,7 @@ const { ROLES } = require('../../constants');
 const transferController = require('./transferController');
 
 // All staff roles can initiate transfers
-const allowedTransferRoles = [ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR];
+const allowedTransferRoles = [ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR];
 
 // GET /api/transfers/hospitals - View reference hospitals
 router.get('/hospitals', 
@@ -26,14 +26,14 @@ router.get('/hospitals',
 // GET /api/transfers/internal - View history of internal ward transfers
 router.get('/internal', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   transferController.getInternalTransferHistory
 );
 
 // GET /api/transfers/external - View history of external hospital transfers
 router.get('/external', 
   authenticateJWT, 
-  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.STAFF, ROLES.DOCTOR), 
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR), 
   transferController.getExternalTransferHistory
 );
 

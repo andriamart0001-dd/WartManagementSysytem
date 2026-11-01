@@ -33,7 +33,9 @@ const equipmentRoutes = require('./modules/equipment/equipmentRoutes');
 const dashboardRoutes = require('./modules/dashboard/dashboardRoutes');
 const hospitalRoutes = require('./modules/hospital/hospitalRoutes');
 const alertRoutes = require('./modules/alert/shortageAlertRoutes');
-const vitalsRoutes = require('./modules/vitals/vitalsRoutes');
+const sectionRoutes = require('./modules/section/sectionRoutes');
+const clinicalRequestRoutes = require('./modules/clinicalRequest/clinicalRequestRoutes');
+const patientRoutes = require('./modules/patient/patientRoutes');
 
 // Create the Express application instance
 const app = express();
@@ -86,11 +88,11 @@ app.use('/api', wardRoutes); // using /api because wardRoutes handles both /depa
 // Bed routes: /api/beds
 app.use('/api/beds', bedRoutes);
 
-// Admission routes: /api/admissions
-app.use('/api/admissions', admissionRoutes);
+// Section routes: /api/sections
+app.use('/api/sections', sectionRoutes);
 
-// Vitals routes: /api/admissions/:id/vitals
-app.use('/api/admissions/:id/vitals', vitalsRoutes);
+// Admission routes: /api/admissions (also handles /api/admissions/:id/vitals via sub-router)
+app.use('/api/admissions', admissionRoutes);
 
 // Transfer routes: /api/transfers
 app.use('/api/transfers', transferRoutes);
@@ -106,6 +108,12 @@ app.use('/api/hospitals', hospitalRoutes);
 
 // Shortage Alert Log routes: /api/alerts
 app.use('/api/alerts', alertRoutes);
+
+// Clinical Request routes: /api/requests
+app.use('/api/requests', clinicalRequestRoutes);
+
+// Patient routes: /api/patients
+app.use('/api/patients', patientRoutes);
 
 // =============================================================================
 // HEALTH CHECK ROUTE

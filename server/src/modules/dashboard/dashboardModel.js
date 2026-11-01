@@ -3,7 +3,7 @@
 // =============================================================================
 
 const db = require('../../config/db');
-const { ADMISSION_STATUS, BED_STATUS } = require('../../constants');
+const { ADMISSION_STATUS, BED_STATUS, WARD_STATUS } = require('../../constants');
 
 const countActiveAdmissions = async () => {
   const [rows] = await db.query(
@@ -13,13 +13,18 @@ const countActiveAdmissions = async () => {
   return rows[0].count;
 };
 
+const countTotalPatients = async () => {
+  const [rows] = await db.query('SELECT COUNT(id) as count FROM patient');
+  return rows[0].count;
+};
+
 const countTotalUsers = async () => {
   const [rows] = await db.query('SELECT COUNT(id) as count FROM users');
   return rows[0].count;
 };
 
 const countTotalWards = async () => {
-  const [rows] = await db.query('SELECT COUNT(id) as count FROM ward WHERE status = "active"');
+  const [rows] = await db.query('SELECT COUNT(id) as count FROM ward WHERE status = ?', [WARD_STATUS.ACTIVE]);
   return rows[0].count;
 };
 
@@ -59,6 +64,7 @@ const getEquipmentShortages = async () => {
 
 module.exports = {
   countActiveAdmissions,
+  countTotalPatients,
   countTotalUsers,
   countTotalWards,
   getBedStats,

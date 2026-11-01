@@ -27,7 +27,7 @@ const createBed = async (req, res) => {
     });
   } catch (error) {
     if (error.message === 'Ward not found') return res.status(404).json({ message: error.message });
-    if (error.message.includes('required') || error.message.includes('already exists')) {
+    if (error.message.includes('required') || error.message.includes('already exists') || error.message.includes('Section not found')) {
       return res.status(400).json({ message: error.message });
     }
     console.error('Create bed error:', error);
@@ -63,7 +63,12 @@ const updateBed = async (req, res) => {
     if (error.message === 'Bed not found' || error.message === 'New Ward not found') {
       return res.status(404).json({ message: error.message });
     }
-    if (error.message.includes('required') || error.message.includes('Invalid status') || error.message.includes('already exists')) {
+    if (
+      error.message.includes('required') || 
+      error.message.includes('Invalid status') || 
+      error.message.includes('already exists') ||
+      error.message.includes('Section not found')
+    ) {
       return res.status(400).json({ message: error.message });
     }
     console.error('Update bed error:', error);
