@@ -13,7 +13,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ROLES } from '../../constants';
 
 // UI Components
 import PageHeader from '../../components/ui/PageHeader';
@@ -23,7 +25,13 @@ import SlideDrawer from '../../components/ui/SlideDrawer';
 
 const PatientManagementPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { addToast } = useToast();
+
+  // Only Admin, WardAdmin, and AdmissionDoctor can register or admit patients (Nurses cannot)
+  const canRegisterAndAdmit = [ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR].includes(user?.role);
+  const registerPath = user?.role === ROLES.ADMISSION_DOCTOR ? '/admission-doctor/patients/new' : '/staff/patients/new';
+  const admitPath = user?.role === ROLES.ADMISSION_DOCTOR ? '/admission-doctor/admit' : '/staff/admit';
 
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,8 +97,8 @@ const PatientManagementPage = () => {
         title="Patient Directory & History"
         subtitle="Manage permanent patient records, track past admissions, and lookup by NIC."
         icon="🗂️"
-        actionLabel="+ Register New Patient"
-        onAction={() => navigate('/staff/patients/new')}
+        actionLabel={canRegisterAndAdmit ? "+ Register New Patient" : undefined}
+        onAction={canRegisterAndAdmit ? () => navigate(registerPath) : undefined}
       />
 
       {/* Live Search Bar */}
@@ -223,14 +231,16 @@ const PatientManagementPage = () => {
                     >
                       📜 History
                     </button>
-                    <button
-                      className="action-btn"
-                      style={{ color: '#0284c7', borderColor: '#bae6fd' }}
-                      title="Admit this patient"
-                      onClick={() => navigate(`/staff/admit?patientId=${p.id}`)}
-                    >
-                      🛏️ Admit
-                    </button>
+                    {canRegisterAndAdmit && (
+                      <button
+                        className="action-btn"
+                        style={{ color: '#0284c7', borderColor: '#bae6fd' }}
+                        title="Admit this patient"
+                        onClick={() => navigate(`${admitPath}?patientId=${p.id}`)}
+                      >
+                        🛏️ Admit
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

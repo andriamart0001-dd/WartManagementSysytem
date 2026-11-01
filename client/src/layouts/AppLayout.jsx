@@ -12,7 +12,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ROLES, ROLE_DASHBOARDS } from '../constants';
+import { ROLES } from '../constants';
 
 const AppLayout = () => {
   const { user, logout } = useAuth();
@@ -58,10 +58,10 @@ const AppLayout = () => {
       case ROLES.WARD_ADMIN:
         return 'badge-ward-admin';
       case ROLES.ADMISSION_DOCTOR:
-      case ROLES.NURSE:
-        return 'badge-staff';
       case ROLES.DOCTOR:
         return 'badge-doctor';
+      case ROLES.NURSE:
+        return 'badge-staff';
       default:
         return 'badge-default';
     }
@@ -116,7 +116,7 @@ const AppLayout = () => {
           <div className="sidebar-section">
             <div className="sidebar-section-title">MAIN MENU</div>
             <nav className="sidebar-nav">
-              {/* Role-Specific Navigation Links */}
+              {/* 1. Admin Role Navigation */}
               {user?.role === ROLES.ADMIN && (
                 <>
                   <NavLink
@@ -184,17 +184,10 @@ const AppLayout = () => {
                     <span className="nav-icon">📋</span>
                     <span>Admission History</span>
                   </NavLink>
-                  <NavLink
-                    to="/admin/patients"
-                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
-                    onClick={() => setIsSidebarOpen(false)}
-                  >
-                    <span className="nav-icon">🗂️</span>
-                    <span>Patient Directory</span>
-                  </NavLink>
                 </>
               )}
 
+              {/* 2. Ward Admin Role Navigation */}
               {user?.role === ROLES.WARD_ADMIN && (
                 <>
                   <NavLink
@@ -249,19 +242,36 @@ const AppLayout = () => {
                 </>
               )}
 
-              {(user?.role === ROLES.NURSE || user?.role === ROLES.ADMISSION_DOCTOR) && (
+              {/* 3. Admission Doctor Role Navigation */}
+              {user?.role === ROLES.ADMISSION_DOCTOR && (
                 <>
                   <NavLink
-                    to="/staff"
+                    to="/admission-doctor"
                     end
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}
                   >
-                    <span className="nav-icon">📋</span>
-                    <span>Patient Operations</span>
+                    <span className="nav-icon">🩺</span>
+                    <span>Doctor Dashboard</span>
                   </NavLink>
                   <NavLink
-                    to="/staff/lookup"
+                    to="/admission-doctor/admit"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🛏️</span>
+                    <span>Admit Patient</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admission-doctor/patients/new"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">➕</span>
+                    <span>Register Patient</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admission-doctor/lookup"
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}
                   >
@@ -279,6 +289,38 @@ const AppLayout = () => {
                 </>
               )}
 
+              {/* 4. Staff Nurse Role Navigation */}
+              {user?.role === ROLES.NURSE && (
+                <>
+                  <NavLink
+                    to="/nurse"
+                    end
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">👩‍⚕️</span>
+                    <span>Nurse Dashboard</span>
+                  </NavLink>
+                  <NavLink
+                    to="/nurse/lookup"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🔍</span>
+                    <span>Patient Lookup</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admin/patients"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🗂️</span>
+                    <span>Patient Directory</span>
+                  </NavLink>
+                </>
+              )}
+
+              {/* 5. Medical Doctor Role Navigation */}
               {user?.role === ROLES.DOCTOR && (
                 <>
                   <NavLink

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ROLES } from '../../constants';
 
 // UI Components
 import PageHeader from '../../components/ui/PageHeader';
@@ -15,8 +16,9 @@ import QRScannerModal from '../../components/ui/QRScannerModal';
 // StaffDashboard.jsx
 // =============================================================================
 // Purpose:
-//   Dashboard for Staff Nurses.
-//   Manages patient admissions, transfers, and vitals logging.
+//   Legacy shared operations dashboard.
+//   Admission doctors see the "+ Admit Patient" action button;
+//   nurses have access to transfers, vitals, and QR scanning.
 // =============================================================================
 
 const StaffDashboard = () => {
@@ -32,6 +34,9 @@ const StaffDashboard = () => {
   
   // Scanner Modal State
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  // Check if current user is allowed to admit patients
+  const canAdmit = user?.role === ROLES.ADMISSION_DOCTOR || user?.role === ROLES.ADMIN || user?.role === ROLES.WARD_ADMIN;
 
   const fetchAdmissions = async () => {
     setIsLoading(true);
@@ -77,8 +82,8 @@ const StaffDashboard = () => {
         title="Patient Operations Dashboard" 
         subtitle={`Welcome back, ${user?.fullName}.`}
         icon="📋"
-        actionLabel="+ Admit Patient"
-        onAction={() => navigate('/staff/admit')}
+        actionLabel={canAdmit ? "+ Admit Patient" : undefined}
+        onAction={canAdmit ? () => navigate('/staff/admit') : undefined}
       />
 
       {/* Quick Actions Row */}
@@ -100,7 +105,6 @@ const StaffDashboard = () => {
         </button>
         <button className="action-btn" style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} onClick={() => navigate('/admin/patients')}>
           🗂️ Patient Directory
-          🩸 Log Vitals
         </button>
       </div>
 
@@ -177,4 +181,3 @@ const StaffDashboard = () => {
 };
 
 export default StaffDashboard;
-

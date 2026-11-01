@@ -12,8 +12,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { GENDER, BLOOD_GROUPS } from '../../constants';
+import { GENDER, BLOOD_GROUPS, ROLES } from '../../constants';
 import FormField from '../../components/ui/FormField';
 import FormPageLayout from '../../components/ui/FormPageLayout';
 
@@ -23,7 +24,9 @@ const PatientRegistrationPage = () => {
   const returnTo = searchParams.get('returnTo');
   const initialNIC = searchParams.get('nic') || '';
 
+  const { user } = useAuth();
   const { addToast } = useToast();
+  const admitPath = user?.role === ROLES.ADMISSION_DOCTOR ? '/admission-doctor/admit' : '/staff/admit';
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -96,7 +99,7 @@ const PatientRegistrationPage = () => {
 
       if (returnTo === 'admit') {
         // Return to Admit Patient page with this patient pre-selected
-        navigate(`/staff/admit?patientId=${createdPatient.id}`);
+        navigate(`${admitPath}?patientId=${createdPatient.id}`);
       } else {
         navigate('/admin/patients');
       }
@@ -130,7 +133,7 @@ const PatientRegistrationPage = () => {
       title="Register New Patient"
       subtitle="Create a permanent patient profile with identity details and blood group."
       icon="🧑‍⚕️"
-      backTo={returnTo === 'admit' ? '/staff/admit' : '/admin/patients'}
+      backTo={returnTo === 'admit' ? admitPath : '/admin/patients'}
       backLabel={returnTo === 'admit' ? 'Back to Admission' : 'Back to Patients'}
     >
       <form onSubmit={handleSubmit}>
@@ -163,7 +166,7 @@ const PatientRegistrationPage = () => {
                 type="button"
                 className="submit-button"
                 style={{ width: 'auto', padding: '8px 16px', fontSize: '13px' }}
-                onClick={() => navigate(`/staff/admit?patientId=${existingPatientFound.id}`)}
+                onClick={() => navigate(`${admitPath}?patientId=${existingPatientFound.id}`)}
               >
                 Proceed to Admit This Patient
               </button>
