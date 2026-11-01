@@ -13,14 +13,6 @@
 --        Admissions (`patientAdmission`) link to `patient.id`.
 -- =============================================================================
 
-DROP DATABASE IF EXISTS ward_management_db;
-
-CREATE DATABASE ward_management_db
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE ward_management_db;
-
 -- -----------------------------------------------------------------------------
 -- TABLE 1: users
 -- Stores all hospital staff accounts with role-based access control.
@@ -31,8 +23,9 @@ CREATE TABLE users (
   email           VARCHAR(255)  NOT NULL UNIQUE,
   passwordHash    VARCHAR(255)  NOT NULL,
   role            ENUM('admin', 'wardAdmin', 'admissionDoctor', 'nurse', 'doctor', 'staff') NOT NULL,
-  contactNumber   VARCHAR(20)   DEFAULT NULL,
-  status          ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+  contactNumber       VARCHAR(20)   DEFAULT NULL,
+  status              ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+  isTemporaryPassword TINYINT(1)    NOT NULL DEFAULT 0,
 
   -- Audit columns
   createdAt       TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -408,6 +401,22 @@ CREATE TABLE clinicalRequest (
   CONSTRAINT fk_cr_reviewedBy  FOREIGN KEY (reviewedBy)  REFERENCES users (id),
   CONSTRAINT fk_cr_createdBy   FOREIGN KEY (createdBy)   REFERENCES users (id) ON DELETE SET NULL,
   CONSTRAINT fk_cr_updatedBy   FOREIGN KEY (updatedBy)   REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- TABLE 16: user_ward_assignments
+-- Assigns staff (nurses, ward admins) to specific wards.
+-- -----------------------------------------------------------------------------
+CREATE TABLE user_ward_assignments (
+  id          INT           NOT NULL AUTO_INCREMENT,
+  userId      INT           NOT NULL,
+  wardId      INT           NOT NULL,
+  createdAt   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+  UNIQUE KEY unique_user_ward (userId, wardId),
+  CONSTRAINT fk_uwa_userId FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_uwa_wardId FOREIGN KEY (wardId) REFERENCES ward (id)  ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================================================

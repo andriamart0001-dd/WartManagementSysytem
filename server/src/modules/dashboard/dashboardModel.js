@@ -3,7 +3,7 @@
 // =============================================================================
 
 const db = require('../../config/db');
-const { ADMISSION_STATUS, BED_STATUS } = require('../../constants');
+const { ADMISSION_STATUS, BED_STATUS, WARD_STATUS } = require('../../constants');
 
 const countActiveAdmissions = async () => {
   const [rows] = await db.query(
@@ -24,7 +24,7 @@ const countTotalUsers = async () => {
 };
 
 const countTotalWards = async () => {
-  const [rows] = await db.query('SELECT COUNT(id) as count FROM ward WHERE status = "active"');
+  const [rows] = await db.query('SELECT COUNT(id) as count FROM ward WHERE status = ?', [WARD_STATUS.ACTIVE]);
   return rows[0].count;
 };
 
