@@ -336,6 +336,9 @@ button {
 .btn-staff { border-left: 4px solid var(--role-staff); }
 .btn-staff:hover:not(:disabled) { background-color: var(--role-staff-bg); }
 
+.btn-admission-doctor { border-left: 4px solid #0284c7; }
+.btn-admission-doctor:hover:not(:disabled) { background-color: #f0f9ff; }
+
 .btn-doctor { border-left: 4px solid var(--role-doctor); }
 .btn-doctor:hover:not(:disabled) { background-color: var(--role-doctor-bg); }
 
