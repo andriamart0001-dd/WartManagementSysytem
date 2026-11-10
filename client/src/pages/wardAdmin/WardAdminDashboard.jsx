@@ -7,7 +7,6 @@ import { useToast } from '../../context/ToastContext';
 // Components
 import PageHeader from '../../components/ui/PageHeader';
 import StatCard from '../../components/ui/StatCard';
-import AlertBanner from '../../components/ui/AlertBanner';
 
 // =============================================================================
 // WardAdminDashboard.jsx
@@ -16,6 +15,8 @@ import AlertBanner from '../../components/ui/AlertBanner';
 //   Ward Administrator Dashboard View.
 //   Displays live statistics strictly for the Ward Admin's assigned ward,
 //   including pending discharge requests, bed availability, and shortage alerts.
+//   Note: Direct in-page shortage banners have been moved to the top-bar notification
+//   bell and Alert Center page to keep the dashboard clean.
 // =============================================================================
 
 const WardAdminDashboard = () => {
@@ -28,7 +29,6 @@ const WardAdminDashboard = () => {
     activeAlerts: 0,
     pendingRequests: 0
   });
-  const [shortages, setShortages] = useState({ wards: [], equipment: [] });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -56,12 +56,6 @@ const WardAdminDashboard = () => {
           pendingRequests: pendingCount
         });
 
-        if (summaryData.shortages) {
-          setShortages({
-            wards: Array.isArray(summaryData.shortages.wards) ? summaryData.shortages.wards : [],
-            equipment: Array.isArray(summaryData.shortages.equipment) ? summaryData.shortages.equipment : []
-          });
-        }
       } catch (error) {
         console.error('Error fetching ward admin dashboard stats:', error);
         addToast('Failed to load dashboard statistics', 'error');
@@ -85,22 +79,6 @@ const WardAdminDashboard = () => {
         icon="🛌"
       />
 
-      {/* Shortage Alerts */}
-      {!isLoading && shortages.wards.map(ward => (
-        <AlertBanner 
-          key={`ward-${ward.id}`} 
-          message={`Ward Shortage: ${ward.wardName} has only ${ward.availableBeds} available beds (Minimum threshold is ${ward.minBedThreshold}).`}
-          type="error"
-        />
-      ))}
-      {!isLoading && shortages.equipment.map(eq => (
-        <AlertBanner 
-          key={`eq-${eq.id}`} 
-          message={`Equipment Shortage: ${eq.wardName} has only ${eq.quantity} ${eq.equipmentName}(s) (Minimum threshold is ${eq.minQuantityThreshold}).`}
-          type="error"
-        />
-      ))}
-
       {/* KPI Cards Grid */}
       <div className="dashboard-cards-grid" style={{ marginBottom: '40px' }}>
         <StatCard 
@@ -113,18 +91,22 @@ const WardAdminDashboard = () => {
           value={isLoading ? '...' : stats.totalBeds} 
           icon="🛏️" 
         />
-        <StatCard 
-          title="Pending Discharge Requests" 
-          value={isLoading ? '...' : stats.pendingRequests} 
-          icon="📋"
-          type={stats.pendingRequests > 0 ? 'maintenance' : 'default'}
-        />
-        <StatCard 
-          title="Ward Shortage Alerts" 
-          value={isLoading ? '...' : stats.activeAlerts} 
-          icon="🚨"
-          type={stats.activeAlerts > 0 ? 'shortage' : 'default'}
-        />
+        <Link to="/ward-admin/requests" style={{ textDecoration: 'none' }}>
+          <StatCard 
+            title="Pending Discharges" 
+            value={isLoading ? '...' : stats.pendingRequests} 
+            icon="📋"
+            type={stats.pendingRequests > 0 ? 'maintenance' : 'default'}
+          />
+        </Link>
+        <Link to="/alerts" style={{ textDecoration: 'none' }}>
+          <StatCard 
+            title="Ward Shortages" 
+            value={isLoading ? '...' : stats.activeAlerts} 
+            icon="🚨"
+            type={stats.activeAlerts > 0 ? 'shortage' : 'default'}
+          />
+        </Link>
       </div>
 
       {/* Quick Links Section */}
@@ -174,6 +156,18 @@ const WardAdminDashboard = () => {
             </div>
             <p className="card-description">
               Manage medical equipment quantities and log maintenance.
+            </p>
+          </div>
+        </Link>
+
+        <Link to="/alerts" style={{ textDecoration: 'none' }}>
+          <div className="dash-card" style={{ cursor: 'pointer', borderLeft: stats.activeAlerts > 0 ? '4px solid #ef4444' : undefined }}>
+            <div className="card-header">
+              <span className="card-icon">🚨</span>
+              <h3>Shortage Alerts {stats.activeAlerts > 0 && `(${stats.activeAlerts})`}</h3>
+            </div>
+            <p className="card-description">
+              View and resolve active shortage alerts and equipment threshold warnings.
             </p>
           </div>
         </Link>

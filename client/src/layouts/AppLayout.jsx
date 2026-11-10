@@ -4,7 +4,7 @@
 // Purpose:
 //   Provides the global layout wrapper for all authenticated pages.
 //   Includes:
-//     1. Top Header Navbar (Hospital branding, logged-in user details, Role Badge, Logout)
+//     1. Top Header Navbar (Hospital branding, Notification Bell, User details, Role Badge, Logout)
 //     2. Left Navigation Sidebar (Role-aware navigation menu with live badges)
 //     3. Main Content View area (renders child components via <Outlet />)
 // =============================================================================
@@ -23,26 +23,40 @@ const AppLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // Pending clinical requests counter for badges
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  // Active shortage alerts counter for topbar notification bell
+  const [activeAlertsCount, setActiveAlertsCount] = useState(0);
 
   // ===========================================================================
-  // DATA FETCHING: Pending clinical requests count
+  // DATA FETCHING: Live counts for Notification Bell & Badges
   // ===========================================================================
   useEffect(() => {
     if (!user) return;
 
-    const fetchPendingCount = async () => {
+    const fetchLiveCounts = async () => {
       try {
-        const res = await axiosInstance.get('/requests/pending-count');
-        setPendingRequestsCount(res.data?.count || 0);
+        const [requestsRes, alertsRes] = await Promise.allSettled([
+          axiosInstance.get('/requests/pending-count'),
+          axiosInstance.get('/alerts?status=active')
+        ]);
+
+        if (requestsRes.status === 'fulfilled') {
+          setPendingRequestsCount(requestsRes.value.data?.count || 0);
+        }
+
+        if (alertsRes.status === 'fulfilled') {
+          const alertsList = Array.isArray(alertsRes.value.data?.alerts) 
+            ? alertsRes.value.data.alerts 
+            : [];
+          setActiveAlertsCount(alertsList.length);
+        }
       } catch (err) {
         // Silently fail if user role does not have access or offline
-        setPendingRequestsCount(0);
       }
     };
 
-    fetchPendingCount();
-    // Check every 45 seconds for new requests
-    const interval = setInterval(fetchPendingCount, 45000);
+    fetchLiveCounts();
+    // Poll every 30 seconds for live updates
+    const interval = setInterval(fetchLiveCounts, 30000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -111,10 +125,30 @@ const AppLayout = () => {
           </div>
         </div>
 
-        {/* User Info & Logout Controls */}
+        {/* User Info, Notification Bell & Logout Controls */}
         <div className="navbar-right">
           {user && (
             <div className="user-profile-summary">
+              {/* Topbar Notification Bell Button */}
+              <button
+                type="button"
+                className={`topbar-notification-btn ${activeAlertsCount > 0 ? 'has-alerts' : ''}`}
+                onClick={() => navigate('/alerts')}
+                title={
+                  activeAlertsCount > 0 
+                    ? `⚠️ ${activeAlertsCount} active shortage alert(s). Click to view.` 
+                    : 'Notifications: All ward beds and equipment optimal.'
+                }
+                aria-label="View notifications and alerts"
+              >
+                <span className="bell-emoji">🔔</span>
+                {activeAlertsCount > 0 && (
+                  <span className="bell-badge-count">
+                    {activeAlertsCount}
+                  </span>
+                )}
+              </button>
+
               <div className="user-text-info">
                 <span className="user-name">{user.fullName}</span>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -139,6 +173,7 @@ const AppLayout = () => {
                   )}
                 </div>
               </div>
+
               <button
                 className="action-btn"
                 onClick={() => navigate('/profile')}
@@ -158,6 +193,7 @@ const AppLayout = () => {
                 <span>👤</span>
                 <span>Profile</span>
               </button>
+
               <button
                 className="logout-button"
                 onClick={handleLogout}
@@ -223,12 +259,25 @@ const AppLayout = () => {
                     <span>External Hospitals</span>
                   </NavLink>
                   <NavLink
-                    to="/admin/alerts"
+                    to="/alerts"
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}
                   >
                     <span className="nav-icon">🚨</span>
                     <span>Shortage Alerts</span>
+                    {activeAlertsCount > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        backgroundColor: '#dc2626',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        {activeAlertsCount}
+                      </span>
+                    )}
                   </NavLink>
                   <NavLink
                     to="/admin/requests"
@@ -344,12 +393,25 @@ const AppLayout = () => {
                     <span>Transfer History</span>
                   </NavLink>
                   <NavLink
-                    to="/admin/alerts"
+                    to="/alerts"
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}
                   >
                     <span className="nav-icon">🚨</span>
                     <span>Shortage Alerts</span>
+                    {activeAlertsCount > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        backgroundColor: '#dc2626',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        {activeAlertsCount}
+                      </span>
+                    )}
                   </NavLink>
                   <NavLink
                     to="/admin/patients"
@@ -397,6 +459,27 @@ const AppLayout = () => {
                   >
                     <span className="nav-icon">🔍</span>
                     <span>Patient Lookup</span>
+                  </NavLink>
+                  <NavLink
+                    to="/alerts"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🚨</span>
+                    <span>Shortage Alerts</span>
+                    {activeAlertsCount > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        backgroundColor: '#dc2626',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        {activeAlertsCount}
+                      </span>
+                    )}
                   </NavLink>
                   <NavLink
                     to="/admission-doctor/transfers/history"
@@ -451,6 +534,27 @@ const AppLayout = () => {
                     )}
                   </NavLink>
                   <NavLink
+                    to="/alerts"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🚨</span>
+                    <span>Shortage Alerts</span>
+                    {activeAlertsCount > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        backgroundColor: '#dc2626',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        {activeAlertsCount}
+                      </span>
+                    )}
+                  </NavLink>
+                  <NavLink
                     to="/nurse/transfers/history"
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}
@@ -496,6 +600,27 @@ const AppLayout = () => {
                   >
                     <span className="nav-icon">📋</span>
                     <span>Discharge Requests</span>
+                  </NavLink>
+                  <NavLink
+                    to="/alerts"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🚨</span>
+                    <span>Shortage Alerts</span>
+                    {activeAlertsCount > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        backgroundColor: '#dc2626',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        {activeAlertsCount}
+                      </span>
+                    )}
                   </NavLink>
                   <NavLink
                     to="/admin/patients"

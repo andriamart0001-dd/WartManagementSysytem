@@ -1,18 +1,20 @@
 // =============================================================================
-// AlertManagementPage.jsx — Shortage Alert Management Interface
+// AlertManagementPage.jsx — Hospital Shortage Alert & Notification Center
 // =============================================================================
 // Purpose:
-//   Allows the Admin and Ward Admin to monitor bed and equipment shortage alerts.
-//   Users can filter alerts by status (Active, Resolved, All) and mark active
-//   alerts as resolved once supplies or beds are restored.
+//   Centralized notification interface for all hospital staff to monitor active
+//   and historical bed and equipment shortage alerts.
+//   System Admins and Ward Admins can mark alerts as resolved once resources
+//   are replenished. Other staff (Doctors, Nurses) have a real-time advisory view.
 //
-// Route: /admin/alerts
+// Route: /alerts (and /admin/alerts)
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ROLES } from '../../constants';
 
 // Reusable UI Components
 import PageHeader from '../../components/ui/PageHeader';
@@ -23,6 +25,9 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 const AlertManagementPage = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
+
+  // Check if current user has permission to resolve shortage alerts
+  const canResolve = user?.role === ROLES.ADMIN || user?.role === ROLES.WARD_ADMIN;
 
   // Alert list data and loading status
   const [alerts, setAlerts] = useState([]);
@@ -42,7 +47,7 @@ const AlertManagementPage = () => {
   const fetchAlerts = async () => {
     setIsLoading(true);
     try {
-      // Build the query parameter based on the selected tab
+      // Build query parameter based on the selected tab
       let endpoint = '/alerts';
       if (filterStatus === 'active') {
         endpoint = '/alerts?status=active';
@@ -58,7 +63,7 @@ const AlertManagementPage = () => {
 
       setAlerts(alertList);
     } catch (error) {
-      console.error('Error fetching shortage alerts:', error);
+      console.error('Error fetching alerts:', error);
       addToast('Failed to load shortage alerts', 'error');
       setAlerts([]);
     } finally {
@@ -66,17 +71,17 @@ const AlertManagementPage = () => {
     }
   };
 
-  // Re-fetch data whenever the filter tab changes
+  // Re-fetch alerts whenever filterStatus changes
   useEffect(() => {
     fetchAlerts();
     // eslint-disable-next-line
   }, [filterStatus]);
 
   // ===========================================================================
-  // RESOLVE ALERT: Open modal and submit resolve request
+  // HANDLERS: Modal open/close & resolving an alert
   // ===========================================================================
-  const openResolveModal = (alert) => {
-    setSelectedAlert(alert);
+  const openResolveModal = (alertItem) => {
+    setSelectedAlert(alertItem);
     setIsResolveModalOpen(true);
   };
 
@@ -90,11 +95,13 @@ const AlertManagementPage = () => {
 
     setIsResolving(true);
     try {
-      // Send PUT request to mark the alert as resolved in the database
+      // Send resolve request to the server
       await axiosInstance.put(`/alerts/${selectedAlert.id}/resolve`);
-      addToast('Alert resolved successfully', 'success');
+
+      addToast('Alert marked as resolved successfully', 'success');
       closeResolveModal();
-      // Refresh the table data
+
+      // Refresh the alerts list
       fetchAlerts();
     } catch (error) {
       console.error('Error resolving alert:', error);
@@ -104,99 +111,92 @@ const AlertManagementPage = () => {
     }
   };
 
-  // Helper function to format timestamp nicely
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '—';
-    return new Date(dateString).toLocaleString('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
-    });
-  };
-
-  // Helper to format alert type label nicely
-  const formatAlertType = (alertType) => {
-    if (alertType === 'bedShortage') {
+  // Helper function to format alert type into clean text
+  const formatAlertType = (type) => {
+    if (type === 'bedShortage') {
       return '🛏️ Bed Shortage';
     }
-    if (alertType === 'equipmentShortage') {
+    if (type === 'equipmentShortage') {
       return '🪛 Equipment Shortage';
     }
-    return alertType;
+    return type;
+  };
+
+  // Helper function to format date/time strings
+  const formatDateTime = (dateString) => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   return (
     <div className="dashboard-page">
       {/* Page Header */}
       <PageHeader
-        title="Shortage Alert Management"
+        title="Shortage Alerts & Notifications"
         subtitle={
-          user?.assignedWardName
-            ? `Monitor and resolve critical shortage alerts for ${user.assignedWardName}.`
-            : "Monitor and resolve critical bed and equipment shortage alerts across hospital wards."
+          canResolve
+            ? "Monitor real-time bed and medical equipment shortages. Mark alerts resolved when resolved."
+            : "Hospital-wide operational shortage alerts and advisory notices for medical staff."
         }
         icon="🚨"
       />
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs Bar */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
         <button
           type="button"
+          className="action-btn"
+          style={{
+            padding: '8px 16px',
+            backgroundColor: filterStatus === 'active' ? '#fee2e2' : '#ffffff',
+            borderColor: filterStatus === 'active' ? '#dc2626' : '#cbd5e1',
+            color: filterStatus === 'active' ? '#b91c1c' : '#475569',
+            fontWeight: filterStatus === 'active' ? 700 : 500
+          }}
           onClick={() => setFilterStatus('active')}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: '1px solid #cbd5e1',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '13px',
-            backgroundColor: filterStatus === 'active' ? 'var(--primary)' : '#ffffff',
-            color: filterStatus === 'active' ? '#ffffff' : '#475569'
-          }}
         >
-          🔴 Active Alerts
+          🚨 Active Shortages
         </button>
 
         <button
           type="button"
+          className="action-btn"
+          style={{
+            padding: '8px 16px',
+            backgroundColor: filterStatus === 'resolved' ? '#d1fae5' : '#ffffff',
+            borderColor: filterStatus === 'resolved' ? '#059669' : '#cbd5e1',
+            color: filterStatus === 'resolved' ? '#047857' : '#475569',
+            fontWeight: filterStatus === 'resolved' ? 700 : 500
+          }}
           onClick={() => setFilterStatus('resolved')}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '6px',
-            border: '1px solid #cbd5e1',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '13px',
-            backgroundColor: filterStatus === 'resolved' ? 'var(--primary)' : '#ffffff',
-            color: filterStatus === 'resolved' ? '#ffffff' : '#475569'
-          }}
         >
-          🟢 Resolved Alerts
+          ✅ Resolved History
         </button>
 
         <button
           type="button"
-          onClick={() => setFilterStatus('all')}
+          className="action-btn"
           style={{
             padding: '8px 16px',
-            borderRadius: '6px',
-            border: '1px solid #cbd5e1',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '13px',
-            backgroundColor: filterStatus === 'all' ? 'var(--primary)' : '#ffffff',
-            color: filterStatus === 'all' ? '#ffffff' : '#475569'
+            backgroundColor: filterStatus === 'all' ? '#e2e8f0' : '#ffffff',
+            borderColor: filterStatus === 'all' ? '#64748b' : '#cbd5e1',
+            color: filterStatus === 'all' ? '#0f172a' : '#475569',
+            fontWeight: filterStatus === 'all' ? 700 : 500
           }}
+          onClick={() => setFilterStatus('all')}
         >
-          📑 All History
+          📋 All Alerts
         </button>
       </div>
 
-      {/* Alerts Table */}
+      {/* Alert Data Table */}
       <DataTable
         columns={[
           'Alert ID',
           'Type',
-          'Resource / Ward',
+          'Affected Ward / Resource',
+          'Threshold Notice',
           'Triggered At',
           'Status',
           'Resolved At',
@@ -205,14 +205,14 @@ const AlertManagementPage = () => {
         isEmpty={!isLoading && alerts.length === 0}
         emptyMessage={
           filterStatus === 'active'
-            ? 'No active shortage alerts at this time. All resources are above threshold!'
-            : 'No alerts found for this filter.'
+            ? '✅ No active shortage alerts! All ward beds and equipment levels are optimal.'
+            : 'No shortage alerts found for the selected filter.'
         }
       >
         {isLoading ? (
           <tr>
-            <td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
-              Loading shortage alerts...
+            <td colSpan="8" style={{ textAlign: 'center', padding: '24px' }}>
+              Loading alerts...
             </td>
           </tr>
         ) : (
@@ -222,25 +222,25 @@ const AlertManagementPage = () => {
             return (
               <tr key={alertItem.id}>
                 {/* Alert ID */}
-                <td style={{ fontWeight: 600, color: '#334155' }}>
+                <td className="mono-data">
                   #{alertItem.id}
                 </td>
 
                 {/* Alert Type */}
-                <td style={{ fontWeight: 500 }}>
+                <td style={{ fontWeight: 600 }}>
                   {formatAlertType(alertItem.alertType)}
                 </td>
 
                 {/* Resource / Ward Name */}
                 <td>
                   {alertItem.wardName && (
-                    <div>
-                      <span style={{ fontWeight: 600 }}>Ward:</span> {alertItem.wardName}
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>
+                      🏥 {alertItem.wardName}
                     </div>
                   )}
                   {alertItem.equipmentName && (
-                    <div style={{ color: '#475569', fontSize: '13px' }}>
-                      <span style={{ fontWeight: 600 }}>Equipment:</span> {alertItem.equipmentName}
+                    <div style={{ color: '#0369a1', fontSize: '13px', fontWeight: 500 }}>
+                      🪛 {alertItem.equipmentName}
                     </div>
                   )}
                   {!alertItem.wardName && !alertItem.equipmentName && (
@@ -248,30 +248,42 @@ const AlertManagementPage = () => {
                   )}
                 </td>
 
+                {/* Threshold Notice Message */}
+                <td style={{ fontSize: '13px', color: '#334155', maxWidth: '250px' }}>
+                  {alertItem.alertType === 'bedShortage' && (
+                    <span>Available beds fell below minimum safety threshold.</span>
+                  )}
+                  {alertItem.alertType === 'equipmentShortage' && (
+                    <span>Operational equipment quantity fell below ward threshold.</span>
+                  )}
+                  {!alertItem.alertType && 'Resource shortage detected.'}
+                </td>
+
                 {/* Triggered At */}
-                <td style={{ fontSize: '13px', color: '#475569' }}>
+                <td style={{ fontSize: '13px', color: '#475569', whiteSpace: 'nowrap' }}>
                   {formatDateTime(alertItem.triggeredAt)}
                 </td>
 
                 {/* Status Badge */}
                 <td>
                   {isResolved ? (
-                    <StatusBadge status="available" text="Resolved" />
+                    <StatusBadge status="available" />
                   ) : (
-                    <StatusBadge status="occupied" text="Active" />
+                    <StatusBadge status="shortage" />
                   )}
                 </td>
 
                 {/* Resolved At */}
-                <td style={{ fontSize: '13px', color: '#475569' }}>
+                <td style={{ fontSize: '13px', color: '#475569', whiteSpace: 'nowrap' }}>
                   {formatDateTime(alertItem.resolvedAt)}
                 </td>
 
                 {/* Actions */}
                 <td>
-                  {!isResolved ? (
+                  {!isResolved && canResolve ? (
                     <button
                       type="button"
+                      className="action-btn"
                       onClick={() => openResolveModal(alertItem)}
                       style={{
                         padding: '6px 12px',
@@ -286,9 +298,13 @@ const AlertManagementPage = () => {
                     >
                       ✓ Mark Resolved
                     </button>
+                  ) : !isResolved && !canResolve ? (
+                    <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 600 }}>
+                      ⚠️ Active Shortage
+                    </span>
                   ) : (
                     <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>
-                      ✓ Closed
+                      ✓ Resolved
                     </span>
                   )}
                 </td>
@@ -298,14 +314,15 @@ const AlertManagementPage = () => {
         )}
       </DataTable>
 
-      {/* Confirmation Modal to Resolve Alert */}
+      {/* Confirmation Modal for Resolving an Alert */}
       <ConfirmModal
         isOpen={isResolveModalOpen}
         onClose={closeResolveModal}
         onConfirm={handleConfirmResolve}
         title="Resolve Shortage Alert"
-        message={`Are you sure you want to mark Alert #${selectedAlert?.id} (${selectedAlert?.wardName || selectedAlert?.equipmentName || 'Resource'}) as resolved?`}
-        confirmText="Yes, Mark Resolved"
+        message={`Are you sure you want to resolve alert #${selectedAlert?.id}? This indicates that supplies or bed capacities have been restored.`}
+        confirmText="Confirm Resolution"
+        isDanger={false}
         isLoading={isResolving}
       />
     </div>

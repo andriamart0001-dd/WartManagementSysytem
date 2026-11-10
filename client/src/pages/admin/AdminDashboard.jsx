@@ -7,7 +7,6 @@ import { useToast } from '../../context/ToastContext';
 // Components
 import PageHeader from '../../components/ui/PageHeader';
 import StatCard from '../../components/ui/StatCard';
-import AlertBanner from '../../components/ui/AlertBanner';
 
 // =============================================================================
 // AdminDashboard.jsx
@@ -15,6 +14,8 @@ import AlertBanner from '../../components/ui/AlertBanner';
 // Purpose:
 //   System Administrator Dashboard View.
 //   Fetches live stats from /api/dashboard/summary.
+//   Note: Shortage alerts and warnings are now centralized in the top notification
+//   bell and Alert Center page to keep the dashboard clean.
 // =============================================================================
 
 const AdminDashboard = () => {
@@ -25,9 +26,9 @@ const AdminDashboard = () => {
     totalUsers: 0,
     totalWards: 0,
     totalBeds: 0,
+    activePatients: 0,
     activeAlerts: 0
   });
-  const [shortages, setShortages] = useState({ wards: [], equipment: [] });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -53,13 +54,6 @@ const AdminDashboard = () => {
           activeAlerts: wardShortageCount + equipShortageCount
         });
 
-        if (summaryData.shortages) {
-          setShortages({
-            wards: Array.isArray(summaryData.shortages.wards) ? summaryData.shortages.wards : [],
-            equipment: Array.isArray(summaryData.shortages.equipment) ? summaryData.shortages.equipment : []
-          });
-        }
-
       } catch (error) {
         console.error('Error fetching admin dashboard stats:', error);
         addToast('Failed to load dashboard statistics', 'error');
@@ -79,22 +73,6 @@ const AdminDashboard = () => {
         icon="👑"
       />
 
-      {/* Shortage Alerts */}
-      {!isLoading && shortages.wards.map(ward => (
-        <AlertBanner 
-          key={`ward-${ward.id}`} 
-          message={`Ward Shortage: ${ward.wardName} has only ${ward.availableBeds} available beds (Minimum threshold is ${ward.minBedThreshold}).`}
-          type="error"
-        />
-      ))}
-      {!isLoading && shortages.equipment.map(eq => (
-        <AlertBanner 
-          key={`eq-${eq.id}`} 
-          message={`Equipment Shortage: ${eq.wardName} has only ${eq.quantity} ${eq.equipmentName}(s) (Minimum threshold is ${eq.minQuantityThreshold}).`}
-          type="error"
-        />
-      ))}
-
       {/* KPI Cards Grid */}
       <div className="dashboard-cards-grid" style={{ marginBottom: '40px' }}>
         <StatCard 
@@ -108,25 +86,27 @@ const AdminDashboard = () => {
           icon="🏥" 
         />
         <StatCard 
-          title="Active Patients" 
-          value={isLoading ? '...' : stats.activePatients} 
-          icon="🧑‍⚕️" 
-        />
-        <StatCard 
           title="Total Beds" 
           value={isLoading ? '...' : stats.totalBeds} 
-          icon="🛌" 
+          icon="🛏️" 
         />
         <StatCard 
-          title="Shortage Alerts" 
-          value={isLoading ? '...' : stats.activeAlerts} 
-          icon="🚨"
-          type={stats.activeAlerts > 0 ? 'shortage' : 'default'}
+          title="Admitted Patients" 
+          value={isLoading ? '...' : stats.activePatients} 
+          icon="🩺" 
         />
+        <Link to="/alerts" style={{ textDecoration: 'none' }}>
+          <StatCard 
+            title="Shortage Alerts" 
+            value={isLoading ? '...' : stats.activeAlerts} 
+            icon="🚨"
+            type={stats.activeAlerts > 0 ? 'shortage' : 'default'}
+          />
+        </Link>
       </div>
 
-      {/* Quick Links Section */}
-      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Quick Management</h2>
+      {/* Quick Action Operations */}
+      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Administrative Modules</h2>
       <div className="dashboard-cards-grid">
         <Link to="/admin/users" style={{ textDecoration: 'none' }}>
           <div className="dash-card" style={{ cursor: 'pointer' }}>
@@ -135,7 +115,7 @@ const AdminDashboard = () => {
               <h3>Manage Users</h3>
             </div>
             <p className="card-description">
-              Create, edit, and deactivate hospital staff accounts.
+              Create, update, and manage role-based staff accounts and ward assignments.
             </p>
           </div>
         </Link>
@@ -143,23 +123,59 @@ const AdminDashboard = () => {
         <Link to="/admin/wards" style={{ textDecoration: 'none' }}>
           <div className="dash-card" style={{ cursor: 'pointer' }}>
             <div className="card-header">
-              <span className="card-icon">🏢</span>
+              <span className="card-icon">🏥</span>
               <h3>Manage Wards</h3>
             </div>
             <p className="card-description">
-              Configure hospital departments and ward capacities.
+              Configure hospital wards, bed thresholds, and assigned specialties.
             </p>
           </div>
         </Link>
 
-        <Link to="/admin/patients" style={{ textDecoration: 'none' }}>
+        <Link to="/admin/departments" style={{ textDecoration: 'none' }}>
           <div className="dash-card" style={{ cursor: 'pointer' }}>
             <div className="card-header">
-              <span className="card-icon">🗂️</span>
-              <h3>Patient Directory</h3>
+              <span className="card-icon">🏢</span>
+              <h3>Departments</h3>
             </div>
             <p className="card-description">
-              Browse permanent patient profiles, search by NIC, and view admission histories.
+              Organize medical departments, clinical disciplines, and facilities.
+            </p>
+          </div>
+        </Link>
+
+        <Link to="/admin/hospitals" style={{ textDecoration: 'none' }}>
+          <div className="dash-card" style={{ cursor: 'pointer' }}>
+            <div className="card-header">
+              <span className="card-icon">🚑</span>
+              <h3>External Hospitals</h3>
+            </div>
+            <p className="card-description">
+              Manage partner hospitals and transfer destination directory.
+            </p>
+          </div>
+        </Link>
+
+        <Link to="/alerts" style={{ textDecoration: 'none' }}>
+          <div className="dash-card" style={{ cursor: 'pointer', borderLeft: stats.activeAlerts > 0 ? '4px solid #ef4444' : undefined }}>
+            <div className="card-header">
+              <span className="card-icon">🚨</span>
+              <h3>Shortage Alerts {stats.activeAlerts > 0 && `(${stats.activeAlerts})`}</h3>
+            </div>
+            <p className="card-description">
+              Review and resolve active bed shortages and medical equipment flags.
+            </p>
+          </div>
+        </Link>
+
+        <Link to="/admin/admissions" style={{ textDecoration: 'none' }}>
+          <div className="dash-card" style={{ cursor: 'pointer' }}>
+            <div className="card-header">
+              <span className="card-icon">📜</span>
+              <h3>Admission History</h3>
+            </div>
+            <p className="card-description">
+              Search and audit all historical patient stays, admissions, and discharges.
             </p>
           </div>
         </Link>

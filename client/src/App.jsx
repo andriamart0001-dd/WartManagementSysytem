@@ -122,6 +122,22 @@ function App() {
                   element={<ProfilePage />}
                 />
 
+                {/* 0. Centralized Shortage Alerts & Notifications (All Staff Roles) */}
+                <Route
+                  path="/alerts"
+                  element={
+                    <ProtectedRoute allowedRoles={[
+                      ROLES.ADMIN,
+                      ROLES.WARD_ADMIN,
+                      ROLES.ADMISSION_DOCTOR,
+                      ROLES.NURSE,
+                      ROLES.DOCTOR
+                    ]}>
+                      <AlertManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
+
                 {/* 1. Admin Role Dashboard & Pages */}
                 <Route
                   path="/admin"
