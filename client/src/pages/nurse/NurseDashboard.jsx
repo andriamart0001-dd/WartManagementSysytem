@@ -4,7 +4,7 @@
 // Purpose:
 //   Primary dashboard for Staff Nurses.
 //   Allows nurses to log patient vitals, perform internal & external transfers,
-//   look up patients, scan admission QR codes, and view active ward patients.
+//   review & approve doctor discharge requests, scan QR codes, and view active ward patients.
 //   Note: Patient registration and admission are handled by Admission Doctors.
 // =============================================================================
 
@@ -32,6 +32,7 @@ const NurseDashboard = () => {
   // State to store active admissions and loading state
   const [admissions, setAdmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
   // State for the QR printing modal
   const [qrModalData, setQrModalData] = useState(null);
@@ -40,16 +41,26 @@ const NurseDashboard = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // Fetch all active admitted patients across wards
-  const fetchAdmissions = async () => {
+  const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get('/admissions?status=admitted');
-      const admissionList = Array.isArray(response.data.admissions)
-        ? response.data.admissions
-        : (Array.isArray(response.data) ? response.data : []);
-      setAdmissions(admissionList);
+      const [admissionsRes, pendingRes] = await Promise.allSettled([
+        axiosInstance.get('/admissions?status=admitted'),
+        axiosInstance.get('/requests/pending-count')
+      ]);
+
+      if (admissionsRes.status === 'fulfilled') {
+        const admissionList = Array.isArray(admissionsRes.value.data.admissions)
+          ? admissionsRes.value.data.admissions
+          : (Array.isArray(admissionsRes.value.data) ? admissionsRes.value.data : []);
+        setAdmissions(admissionList);
+      }
+
+      if (pendingRes.status === 'fulfilled') {
+        setPendingRequestsCount(pendingRes.value.data?.count || 0);
+      }
     } catch (error) {
-      console.error('Error fetching admissions for nurse dashboard:', error);
+      console.error('Error fetching data for nurse dashboard:', error);
       addToast('Failed to load active patients', 'error');
       setAdmissions([]);
     } finally {
@@ -57,9 +68,9 @@ const NurseDashboard = () => {
     }
   };
 
-  // Fetch admissions on component mount
+  // Fetch data on component mount
   useEffect(() => {
-    fetchAdmissions();
+    fetchDashboardData();
     // eslint-disable-next-line
   }, []);
 
@@ -82,7 +93,7 @@ const NurseDashboard = () => {
 
   return (
     <div className="dashboard-page">
-      {/* Page Header — No Admit button for nurses */}
+      {/* Page Header */}
       <PageHeader 
         title="Nurse Operations Dashboard" 
         subtitle={`Welcome back, ${user?.fullName || 'Nurse'}.`}
@@ -91,6 +102,19 @@ const NurseDashboard = () => {
 
       {/* Quick Action Buttons Row */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <button 
+          className="action-btn" 
+          style={{ 
+            padding: '8px 16px', 
+            backgroundColor: pendingRequestsCount > 0 ? '#fef3c7' : '#ffffff', 
+            border: pendingRequestsCount > 0 ? '1px solid #f59e0b' : '1px solid #cbd5e1',
+            color: pendingRequestsCount > 0 ? '#b45309' : '#0f172a',
+            fontWeight: 600
+          }} 
+          onClick={() => navigate('/nurse/requests')}
+        >
+          📋 Discharge Requests {pendingRequestsCount > 0 && `(${pendingRequestsCount})`}
+        </button>
         <button 
           className="action-btn" 
           style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 

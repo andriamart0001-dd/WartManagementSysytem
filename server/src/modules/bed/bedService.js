@@ -5,8 +5,14 @@
 const bedModel = require('./bedModel');
 const { BED_STATUS } = require('../../constants');
 
+// Get all beds (optionally filtered by wardId)
 const getBeds = async (wardId) => {
   return await bedModel.findAllBeds(wardId);
+};
+
+// Get a single bed by ID
+const getBedById = async (id) => {
+  return await bedModel.findBedById(id);
 };
 
 const createBed = async (bedData, userId) => {
@@ -67,6 +73,7 @@ const updateBed = async (id, bedData, userId) => {
 
 module.exports = {
   getBeds,
+  getBedById,
   createBed,
   updateBedStatus,
   updateBed

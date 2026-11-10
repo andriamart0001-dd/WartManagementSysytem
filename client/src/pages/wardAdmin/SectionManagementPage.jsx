@@ -4,13 +4,14 @@
 // Purpose:
 //   Allows Ward Admins and Hospital Admins to manage sections within wards.
 //   Beds can be grouped into sections (e.g., Pre-Op, Post-Op, Bay 1, Bay 2).
-//   Provides inline creation, inline renaming, and safe deletion.
+//   Strictly locks Ward Admins to their assigned ward.
 //
 // Route: /ward-admin/sections
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosInstance';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 // Reusable UI Components
@@ -20,18 +21,23 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import FormField from '../../components/ui/FormField';
 
 const SectionManagementPage = () => {
+  const { user } = useAuth();
   const { addToast } = useToast();
 
   // Data states
   const [sections, setSections] = useState([]);
   const [wards, setWards] = useState([]);
-  const [selectedWardId, setSelectedWardId] = useState('');
+  const [selectedWardId, setSelectedWardId] = useState(
+    user?.assignedWardId ? user.assignedWardId.toString() : ''
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   // Add Section states
   const [isAdding, setIsAdding] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
-  const [newSectionWardId, setNewSectionWardId] = useState('');
+  const [newSectionWardId, setNewSectionWardId] = useState(
+    user?.assignedWardId ? user.assignedWardId.toString() : ''
+  );
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
 
   // Edit Section states
@@ -68,8 +74,11 @@ const SectionManagementPage = () => {
       setWards(wardList);
       setSections(sectionList);
 
-      // Pre-select first ward in add form if available
-      if (wardList.length > 0 && !newSectionWardId) {
+      // Lock to assigned ward for Ward Admin
+      if (user?.assignedWardId) {
+        setSelectedWardId(user.assignedWardId.toString());
+        setNewSectionWardId(user.assignedWardId.toString());
+      } else if (wardList.length > 0 && !newSectionWardId) {
         setNewSectionWardId(wardList[0].id.toString());
       }
     } catch (error) {
@@ -83,7 +92,7 @@ const SectionManagementPage = () => {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line
-  }, []);
+  }, [user?.assignedWardId]);
 
   // Filter sections based on selected ward dropdown
   const filteredSections = selectedWardId
@@ -204,7 +213,11 @@ const SectionManagementPage = () => {
     <div className="dashboard-page">
       <PageHeader
         title="Ward Sections"
-        subtitle="Group beds into distinct sections within wards (e.g. ICU Bay A, Pre-Op, Post-Op)."
+        subtitle={
+          user?.assignedWardName 
+            ? `Organize sections within ${user.assignedWardName} (e.g. Bay 1, Bay 2, Isolation).`
+            : "Group beds into distinct sections within wards (e.g. ICU Bay A, Pre-Op, Post-Op)."
+        }
         icon="📂"
         actionLabel={isAdding ? 'Cancel Adding' : '+ Add New Section'}
         onAction={() => {
@@ -224,11 +237,13 @@ const SectionManagementPage = () => {
               <FormField
                 id="newWardSelect"
                 type="select"
-                label="Select Ward"
+                label="Assigned Ward"
                 value={newSectionWardId}
                 onChange={(e) => setNewSectionWardId(e.target.value)}
                 options={wardFormOptions}
                 required
+                disabled={Boolean(user?.assignedWardId)}
+                helperText={user?.assignedWardName ? `Locked to ${user.assignedWardName}` : undefined}
               />
             </div>
             <div style={{ flex: '2 1 250px' }}>
@@ -255,14 +270,16 @@ const SectionManagementPage = () => {
       )}
 
       {/* FILTER CONTROLS */}
-      <div style={{ marginBottom: '20px', maxWidth: '300px' }}>
+      <div style={{ marginBottom: '20px', maxWidth: '340px' }}>
         <FormField
           id="wardFilter"
           type="select"
-          label="Filter by Ward"
+          label={user?.assignedWardName ? `Ward: ${user.assignedWardName}` : "Filter by Ward"}
           value={selectedWardId}
           onChange={(e) => setSelectedWardId(e.target.value)}
           options={wardFilterOptions}
+          disabled={Boolean(user?.assignedWardId)}
+          helperText={user?.assignedWardName ? "You are locked to your assigned ward." : undefined}
         />
       </div>
 

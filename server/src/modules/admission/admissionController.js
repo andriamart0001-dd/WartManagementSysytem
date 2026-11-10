@@ -3,6 +3,7 @@
 // =============================================================================
 
 const admissionService = require('./admissionService');
+const { ROLES } = require('../../constants');
 
 // Retrieve all active admissions
 const getAdmissions = async (req, res) => {
@@ -39,6 +40,15 @@ const getAdmissionById = async (req, res) => {
 // Admit a patient to a ward and bed
 const createAdmission = async (req, res) => {
   try {
+    // Ward Admins can only admit patients to their own assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      if (!req.user.assignedWardId || Number(req.body.wardId) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You can only admit patients to your assigned ward.' 
+        });
+      }
+    }
+
     const admission = await admissionService.createAdmission(req.body, req.user.id);
     return res.status(201).json({
       message: 'Patient admitted successfully',
@@ -63,6 +73,19 @@ const createAdmission = async (req, res) => {
 // Discharge a patient
 const dischargePatient = async (req, res) => {
   try {
+    // Ward Admins can only discharge patients from their own assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      const existingAdmission = await admissionService.getAdmissionById(req.params.id);
+      if (!existingAdmission) {
+        return res.status(404).json({ message: 'Admission record not found' });
+      }
+      if (Number(existingAdmission.wardId) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You can only discharge patients from your assigned ward.' 
+        });
+      }
+    }
+
     const admission = await admissionService.dischargePatient(req.params.id, req.body.dischargeNotes, req.user.id);
     return res.status(200).json({
       message: 'Patient discharged successfully',

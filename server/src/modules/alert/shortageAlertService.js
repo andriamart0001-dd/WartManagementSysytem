@@ -6,8 +6,9 @@ const shortageAlertModel = require('./shortageAlertModel');
 const dashboardModel = require('../dashboard/dashboardModel');
 const { ALERT_TYPES } = require('../../constants');
 
-const getAlerts = async (status) => {
-  return await shortageAlertModel.findAlertsByStatus(status);
+// Retrieve alerts, optionally scoped to a specific ward
+const getAlerts = async (status, wardId = null) => {
+  return await shortageAlertModel.findAlertsByStatus(status, wardId);
 };
 
 const logAlert = async (alertData, userId) => {
@@ -96,8 +97,14 @@ const syncShortages = async (userId = 1) => {
   }
 };
 
+// Get a single alert by ID
+const getAlertById = async (id) => {
+  return await shortageAlertModel.findAlertById(id);
+};
+
 module.exports = {
   getAlerts,
+  getAlertById,
   logAlert,
   resolveAlert,
   syncShortages

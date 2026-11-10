@@ -187,12 +187,22 @@ const findAllHospitals = async () => {
 
 const findInternalTransferHistory = async (admissionId) => {
   let sql = `
-    SELECT t.*, p.fullName AS patientName, p.patientNIC, w1.wardName AS fromWardName, w2.wardName AS toWardName, u.fullName AS transferredByName
+    SELECT 
+      t.*, 
+      p.fullName AS patientName, 
+      p.patientNIC, 
+      w1.wardName AS fromWardName, 
+      w2.wardName AS toWardName,
+      b1.bedNumber AS fromBedNumber,
+      b2.bedNumber AS toBedNumber,
+      u.fullName AS transferredByName
     FROM wardTransfer t
     JOIN patientAdmission a ON t.admissionId = a.id
     JOIN patient p ON a.patientId = p.id
     JOIN ward w1 ON t.fromWardId = w1.id
     JOIN ward w2 ON t.toWardId = w2.id
+    LEFT JOIN bed b1 ON t.fromBedId = b1.id
+    LEFT JOIN bed b2 ON t.toBedId = b2.id
     JOIN users u ON t.transferredBy = u.id
     WHERE 1=1
   `;

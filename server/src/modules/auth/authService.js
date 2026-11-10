@@ -28,11 +28,13 @@ const authenticateUser = async (email, password) => {
     throw new Error('Invalid email or password');
   }
 
-  // Build JWT payload
+  // Build JWT payload (including assigned ward info for ward-scoped access control)
   const tokenPayload = {
     id: userRecord.id,
     role: userRecord.role,
-    fullName: userRecord.fullName
+    fullName: userRecord.fullName,
+    assignedWardId: userRecord.assignedWardId || null,
+    assignedWardName: userRecord.assignedWardName || null
   };
 
   // Create JWT token
@@ -55,7 +57,9 @@ const authenticateUser = async (email, password) => {
       fullName: userRecord.fullName,
       email: userRecord.email,
       role: userRecord.role,
-      isTemporaryPassword: isTemporary ? 1 : 0
+      isTemporaryPassword: isTemporary ? 1 : 0,
+      assignedWardId: userRecord.assignedWardId || null,
+      assignedWardName: userRecord.assignedWardName || null
     }
   };
 };

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
+import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { EQUIPMENT_STATUS } from '../../../constants';
 import FormField from '../../../components/ui/FormField';
 import FormPageLayout from '../../../components/ui/FormPageLayout';
 
@@ -9,18 +11,20 @@ import FormPageLayout from '../../../components/ui/FormPageLayout';
 // EditEquipmentPage.jsx
 // =============================================================================
 // Purpose:
-//   Ward Admin interface to update quantities of existing equipment.
+//   Ward Admin interface to update details, quantities, and status of existing equipment.
 //   Route: GET /ward-admin/equipment/:id/edit
 // =============================================================================
 
 const EditEquipmentPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { addToast } = useToast();
 
   const [formData, setFormData] = useState({
-    name: '',
-    availableQuantity: 1,
+    equipmentName: '',
+    quantity: 1,
+    status: EQUIPMENT_STATUS.AVAILABLE,
     minQuantityThreshold: 1
   });
   
@@ -38,10 +42,18 @@ const EditEquipmentPage = () => {
           
         const equipToEdit = equipList.find(eq => eq.id.toString() === id);
         if (equipToEdit) {
+          // Security check: ensure equipment belongs to Ward Admin's assigned ward
+          if (user?.assignedWardId && Number(equipToEdit.wardId) !== Number(user.assignedWardId)) {
+            addToast('Access denied. You can only edit equipment in your assigned ward.', 'error');
+            navigate('/ward-admin/equipment');
+            return;
+          }
+
           setFormData({
-            name: equipToEdit.name,
-            availableQuantity: equipToEdit.availableQuantity,
-            minQuantityThreshold: equipToEdit.minQuantityThreshold
+            equipmentName: equipToEdit.equipmentName || equipToEdit.name || '',
+            quantity: equipToEdit.quantity || equipToEdit.availableQuantity || 0,
+            status: equipToEdit.status || EQUIPMENT_STATUS.AVAILABLE,
+            minQuantityThreshold: equipToEdit.minQuantityThreshold || 0
           });
         } else {
           setError('Equipment not found.');
@@ -54,7 +66,7 @@ const EditEquipmentPage = () => {
       }
     };
     fetchEquipment();
-  }, [id]);
+  }, [id, user?.assignedWardId, addToast, navigate]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -69,8 +81,9 @@ const EditEquipmentPage = () => {
 
     try {
       const payload = {
-        name: formData.name,
-        availableQuantity: parseInt(formData.availableQuantity, 10),
+        equipmentName: formData.equipmentName.trim(),
+        quantity: parseInt(formData.quantity, 10),
+        status: formData.status,
         minQuantityThreshold: parseInt(formData.minQuantityThreshold, 10)
       };
 
@@ -85,6 +98,12 @@ const EditEquipmentPage = () => {
     }
   };
 
+  const statusOptions = [
+    { value: EQUIPMENT_STATUS.AVAILABLE, label: 'Available (Operational)' },
+    { value: EQUIPMENT_STATUS.IN_USE, label: 'In Use (Active Patient)' },
+    { value: EQUIPMENT_STATUS.MAINTENANCE, label: 'Maintenance (Under Repair / Calibration)' }
+  ];
+
   if (isLoading) {
     return (
       <FormPageLayout title="Update Equipment" backTo="/ward-admin/equipment" backLabel="Back to Equipment">
@@ -96,7 +115,7 @@ const EditEquipmentPage = () => {
   return (
     <FormPageLayout
       title="Update Equipment"
-      subtitle={`Modify inventory levels for ${formData.name}`}
+      subtitle={`Modify inventory levels and status for ${formData.equipmentName}`}
       icon="✏️"
       backTo="/ward-admin/equipment"
       backLabel="Back to Equipment"
@@ -109,22 +128,35 @@ const EditEquipmentPage = () => {
         )}
 
         <FormField 
-          id="name" 
+          id="equipmentName" 
           label="Equipment Name" 
-          value={formData.name} 
-          onChange={handleChange} 
-          required 
-          disabled={true} // Cannot rename easily once registered
-        />
-        <FormField 
-          id="availableQuantity" 
-          type="number" 
-          label="Available Quantity" 
-          value={formData.availableQuantity} 
+          value={formData.equipmentName} 
           onChange={handleChange} 
           required 
           disabled={isSubmitting}
         />
+
+        <FormField 
+          id="quantity" 
+          type="number" 
+          label="Total Quantity in Ward" 
+          value={formData.quantity} 
+          onChange={handleChange} 
+          required 
+          disabled={isSubmitting}
+        />
+
+        <FormField 
+          id="status" 
+          type="select" 
+          label="Operating Status" 
+          value={formData.status} 
+          onChange={handleChange} 
+          options={statusOptions}
+          required 
+          disabled={isSubmitting}
+        />
+
         <FormField 
           id="minQuantityThreshold" 
           type="number" 

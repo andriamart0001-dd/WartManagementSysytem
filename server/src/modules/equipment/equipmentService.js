@@ -13,8 +13,14 @@ const getAllEquipment = async (wardId) => {
   }));
 };
 
+const getEquipmentById = async (id) => {
+  return await equipmentModel.findEquipmentById(id);
+};
+
 const createEquipment = async (equipmentData, userId) => {
-  const { equipmentName, quantity, minQuantityThreshold, wardId } = equipmentData;
+  const equipmentName = equipmentData.equipmentName || equipmentData.name;
+  const quantity = equipmentData.quantity !== undefined ? equipmentData.quantity : equipmentData.availableQuantity;
+  const { minQuantityThreshold, wardId } = equipmentData;
 
   if (!equipmentName || quantity === undefined || !wardId) {
     throw new Error('equipmentName, quantity, and wardId are required');
@@ -40,7 +46,9 @@ const createEquipment = async (equipmentData, userId) => {
 };
 
 const updateEquipment = async (id, updateData, userId) => {
-  const { equipmentName, quantity, status, minQuantityThreshold } = updateData;
+  const equipmentName = updateData.equipmentName !== undefined ? updateData.equipmentName : updateData.name;
+  const quantity = updateData.quantity !== undefined ? updateData.quantity : updateData.availableQuantity;
+  const { status, minQuantityThreshold } = updateData;
 
   const existingEq = await equipmentModel.findEquipmentById(id);
   if (!existingEq) {
@@ -98,6 +106,7 @@ const getMaintenanceLogs = async (equipmentId) => {
 
 module.exports = {
   getAllEquipment,
+  getEquipmentById,
   createEquipment,
   updateEquipment,
   logMaintenance,

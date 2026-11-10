@@ -3,10 +3,24 @@
 // =============================================================================
 
 const shortageAlertService = require('./shortageAlertService');
+const { ROLES } = require('../../constants');
 
+// Retrieve shortage alerts (scoped to assigned ward for Ward Admins)
 const getAlerts = async (req, res) => {
   try {
-    const alerts = await shortageAlertService.getAlerts(req.query.status);
+    let targetWardId = null;
+
+    // Ward Admins should only see alerts concerning their assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      if (!req.user.assignedWardId) {
+        return res.status(403).json({ 
+          message: 'Access denied. You do not have an assigned ward.' 
+        });
+      }
+      targetWardId = req.user.assignedWardId;
+    }
+
+    const alerts = await shortageAlertService.getAlerts(req.query.status, targetWardId);
     return res.status(200).json({
       message: 'Shortage alerts retrieved successfully',
       alerts
@@ -19,6 +33,15 @@ const getAlerts = async (req, res) => {
 
 const logAlert = async (req, res) => {
   try {
+    // Ward Admins can only log alerts for their own assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      if (req.body.wardId && Number(req.body.wardId) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You can only log alerts for your assigned ward.' 
+        });
+      }
+    }
+
     const alert = await shortageAlertService.logAlert(req.body, req.user.id);
     return res.status(201).json({
       message: 'Alert logged successfully',
@@ -35,6 +58,19 @@ const logAlert = async (req, res) => {
 
 const resolveAlert = async (req, res) => {
   try {
+    // Ward Admins can only resolve alerts belonging to their assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      const existingAlert = await shortageAlertService.getAlertById(req.params.id);
+      if (!existingAlert) {
+        return res.status(404).json({ message: 'Alert not found' });
+      }
+      if (existingAlert.wardId && Number(existingAlert.wardId) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You can only resolve alerts in your assigned ward.' 
+        });
+      }
+    }
+
     const alert = await shortageAlertService.resolveAlert(req.params.id, req.user.id);
     return res.status(200).json({
       message: 'Alert resolved successfully',

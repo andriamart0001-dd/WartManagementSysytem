@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosInstance';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 // Reusable UI Components
@@ -20,6 +21,7 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const AlertManagementPage = () => {
+  const { user } = useAuth();
   const { addToast } = useToast();
 
   // Alert list data and loading status
@@ -127,7 +129,11 @@ const AlertManagementPage = () => {
       {/* Page Header */}
       <PageHeader
         title="Shortage Alert Management"
-        subtitle="Monitor and resolve critical bed and equipment shortage alerts across hospital wards."
+        subtitle={
+          user?.assignedWardName
+            ? `Monitor and resolve critical shortage alerts for ${user.assignedWardName}.`
+            : "Monitor and resolve critical bed and equipment shortage alerts across hospital wards."
+        }
         icon="🚨"
       />
 
