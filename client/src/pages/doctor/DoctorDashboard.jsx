@@ -16,7 +16,7 @@ import QRScannerModal from '../../components/ui/QRScannerModal';
 // Purpose:
 //   Main dashboard for the Doctor role.
 //   Shows a live list of all currently admitted patients with quick actions
-//   for viewing details, logging vitals, and discharging.
+//   for viewing details, logging vitals, and requesting discharges.
 // =============================================================================
 
 const DoctorDashboard = () => {
@@ -86,7 +86,7 @@ const DoctorDashboard = () => {
         icon="🩺"
       />
 
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <button 
           className="action-btn" 
           style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
@@ -100,6 +100,13 @@ const DoctorDashboard = () => {
           onClick={() => navigate('/admin/patients')}
         >
           🗂️ Patient Directory
+        </button>
+        <button 
+          className="action-btn" 
+          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
+          onClick={() => navigate('/doctor/requests')}
+        >
+          📋 Discharge Requests
         </button>
       </div>
 
@@ -158,11 +165,11 @@ const DoctorDashboard = () => {
                   {/* Discharge patient */}
                   <button
                     className="action-btn"
-                    title="Discharge Patient"
+                    title="Request Patient Discharge"
                     onClick={() => navigate(`/doctor/discharge/new?admissionId=${adm.id}`)}
-                    style={{ color: 'var(--status-occupied)' }}
+                    style={{ color: '#2563eb', fontWeight: 600 }}
                   >
-                    🏠 Discharge
+                    🏠 Request Discharge
                   </button>
                 </div>
               </td>

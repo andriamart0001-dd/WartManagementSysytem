@@ -5,12 +5,13 @@
 //   Provides the global layout wrapper for all authenticated pages.
 //   Includes:
 //     1. Top Header Navbar (Hospital branding, logged-in user details, Role Badge, Logout)
-//     2. Left Navigation Sidebar (Role-aware navigation menu)
+//     2. Left Navigation Sidebar (Role-aware navigation menu with live badges)
 //     3. Main Content View area (renders child components via <Outlet />)
 // =============================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import axiosInstance from '../api/axiosInstance';
 import { useAuth } from '../context/AuthContext';
 import { ROLES } from '../constants';
 
@@ -20,6 +21,30 @@ const AppLayout = () => {
 
   // Mobile sidebar toggle state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // Pending clinical requests counter for badges
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+
+  // ===========================================================================
+  // DATA FETCHING: Pending clinical requests count
+  // ===========================================================================
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchPendingCount = async () => {
+      try {
+        const res = await axiosInstance.get('/requests/pending-count');
+        setPendingRequestsCount(res.data?.count || 0);
+      } catch (err) {
+        // Silently fail if user role does not have access or offline
+        setPendingRequestsCount(0);
+      }
+    };
+
+    fetchPendingCount();
+    // Check every 45 seconds for new requests
+    const interval = setInterval(fetchPendingCount, 45000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // ===========================================================================
   // HANDLER: Logout
@@ -92,10 +117,47 @@ const AppLayout = () => {
             <div className="user-profile-summary">
               <div className="user-text-info">
                 <span className="user-name">{user.fullName}</span>
-                <span className={`role-badge ${getRoleBadgeClass(user.role)}`}>
-                  {formatRoleLabel(user.role)}
-                </span>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <span className={`role-badge ${getRoleBadgeClass(user.role)}`}>
+                    {formatRoleLabel(user.role)}
+                  </span>
+                  {user.assignedWardName && (
+                    <span 
+                      style={{ 
+                        fontSize: '11px', 
+                        padding: '2px 8px', 
+                        borderRadius: '12px', 
+                        backgroundColor: '#ecfdf5', 
+                        color: '#047857', 
+                        border: '1px solid #a7f3d0',
+                        fontWeight: 600
+                      }}
+                      title="Assigned Ward"
+                    >
+                      🏥 {user.assignedWardName}
+                    </span>
+                  )}
+                </div>
               </div>
+              <button
+                className="action-btn"
+                onClick={() => navigate('/profile')}
+                title="View your account profile and change password"
+                style={{
+                  padding: '6px 12px',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                <span>👤</span>
+                <span>Profile</span>
+              </button>
               <button
                 className="logout-button"
                 onClick={handleLogout}
@@ -169,6 +231,35 @@ const AppLayout = () => {
                     <span>Shortage Alerts</span>
                   </NavLink>
                   <NavLink
+                    to="/admin/requests"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📋</span>
+                    <span>Clinical Requests</span>
+                    {pendingRequestsCount > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        backgroundColor: '#f59e0b',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        {pendingRequestsCount}
+                      </span>
+                    )}
+                  </NavLink>
+                  <NavLink
+                    to="/admin/transfers"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🔄</span>
+                    <span>Transfer History</span>
+                  </NavLink>
+                  <NavLink
                     to="/admin/patients"
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}
@@ -181,7 +272,7 @@ const AppLayout = () => {
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}
                   >
-                    <span className="nav-icon">📋</span>
+                    <span className="nav-icon">📜</span>
                     <span>Admission History</span>
                   </NavLink>
                 </>
@@ -198,6 +289,27 @@ const AppLayout = () => {
                   >
                     <span className="nav-icon">📊</span>
                     <span>Ward Overview</span>
+                  </NavLink>
+                  <NavLink
+                    to="/ward-admin/requests"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📋</span>
+                    <span>Discharge Requests</span>
+                    {pendingRequestsCount > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        backgroundColor: '#f59e0b',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        {pendingRequestsCount}
+                      </span>
+                    )}
                   </NavLink>
                   <NavLink
                     to="/ward-admin/beds"
@@ -222,6 +334,14 @@ const AppLayout = () => {
                   >
                     <span className="nav-icon">🪛</span>
                     <span>Equipment Inventory</span>
+                  </NavLink>
+                  <NavLink
+                    to="/ward-admin/transfers"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🔄</span>
+                    <span>Transfer History</span>
                   </NavLink>
                   <NavLink
                     to="/admin/alerts"
@@ -279,6 +399,14 @@ const AppLayout = () => {
                     <span>Patient Lookup</span>
                   </NavLink>
                   <NavLink
+                    to="/admission-doctor/transfers/history"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🔄</span>
+                    <span>Transfer History</span>
+                  </NavLink>
+                  <NavLink
                     to="/admin/patients"
                     className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
                     onClick={() => setIsSidebarOpen(false)}
@@ -300,6 +428,35 @@ const AppLayout = () => {
                   >
                     <span className="nav-icon">👩‍⚕️</span>
                     <span>Nurse Dashboard</span>
+                  </NavLink>
+                  <NavLink
+                    to="/nurse/requests"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📋</span>
+                    <span>Discharge Requests</span>
+                    {pendingRequestsCount > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        backgroundColor: '#f59e0b',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        {pendingRequestsCount}
+                      </span>
+                    )}
+                  </NavLink>
+                  <NavLink
+                    to="/nurse/transfers/history"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">🔄</span>
+                    <span>Transfer History</span>
                   </NavLink>
                   <NavLink
                     to="/nurse/lookup"
@@ -331,6 +488,14 @@ const AppLayout = () => {
                   >
                     <span className="nav-icon">🩺</span>
                     <span>My Patients</span>
+                  </NavLink>
+                  <NavLink
+                    to="/doctor/requests"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📋</span>
+                    <span>Discharge Requests</span>
                   </NavLink>
                   <NavLink
                     to="/admin/patients"

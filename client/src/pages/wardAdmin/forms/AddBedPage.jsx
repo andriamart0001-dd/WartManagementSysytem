@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
+import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import FormField from '../../../components/ui/FormField';
 import FormPageLayout from '../../../components/ui/FormPageLayout';
@@ -9,16 +10,21 @@ import FormPageLayout from '../../../components/ui/FormPageLayout';
 // AddBedPage.jsx
 // =============================================================================
 // Purpose:
-//   Ward Admin interface to add a new bed to a ward.
-//   Supports assigning the bed to an optional Ward Section.
+//   Ward Admin interface to add a new bed to their assigned ward.
+//   Supports assigning the bed to an optional Ward Section within their ward.
 //   Route: GET /ward-admin/beds/new
 // =============================================================================
 
 const AddBedPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { addToast } = useToast();
 
-  const [formData, setFormData] = useState({ bedNumber: '', wardId: '', sectionId: '' });
+  const [formData, setFormData] = useState({ 
+    bedNumber: '', 
+    wardId: user?.assignedWardId ? user.assignedWardId.toString() : '', 
+    sectionId: '' 
+  });
   const [wards, setWards] = useState([]);
   const [sections, setSections] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,9 +50,15 @@ const AddBedPage = () => {
         setWards(wardList);
         setSections(sectionList);
         
-        if (wardList.length > 0) {
-          setFormData(prev => ({ ...prev, wardId: wardList[0].id.toString() }));
-        }
+        // Prefer assigned ward ID if user is Ward Admin
+        const initialWardId = user?.assignedWardId 
+          ? user.assignedWardId.toString() 
+          : (wardList.length > 0 ? wardList[0].id.toString() : '');
+
+        setFormData(prev => ({ 
+          ...prev, 
+          wardId: initialWardId 
+        }));
       } catch (err) {
         console.error('Error fetching wards and sections:', err);
         setError('Failed to load wards and sections');
@@ -55,7 +67,7 @@ const AddBedPage = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [user?.assignedWardId]);
 
   const wardOptions = wards.map(w => ({ 
     value: w.id.toString(), 
@@ -123,7 +135,11 @@ const AddBedPage = () => {
   return (
     <FormPageLayout
       title="Add New Bed"
-      subtitle="Register a new bed in a specific ward and optional section."
+      subtitle={
+        user?.assignedWardName 
+          ? `Register a new bed in ${user.assignedWardName}.`
+          : "Register a new bed in a specific ward and optional section."
+      }
       icon="🛏️"
       backTo="/ward-admin/beds"
       backLabel="Back to Beds"
@@ -152,7 +168,8 @@ const AddBedPage = () => {
           onChange={handleChange} 
           options={wardOptions}
           required
-          disabled={isSubmitting}
+          disabled={isSubmitting || Boolean(user?.assignedWardId)}
+          helperText={user?.assignedWardName ? `Locked to ${user.assignedWardName}.` : undefined}
         />
 
         <FormField 

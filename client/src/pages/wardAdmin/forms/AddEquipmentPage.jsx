@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
+import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import FormField from '../../../components/ui/FormField';
 import FormPageLayout from '../../../components/ui/FormPageLayout';
@@ -9,17 +10,18 @@ import FormPageLayout from '../../../components/ui/FormPageLayout';
 // AddEquipmentPage.jsx
 // =============================================================================
 // Purpose:
-//   Ward Admin interface to register new equipment to a ward.
+//   Ward Admin interface to register new equipment to their assigned ward.
 //   Route: GET /ward-admin/equipment/new
 // =============================================================================
 
 const AddEquipmentPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { addToast } = useToast();
 
   const [formData, setFormData] = useState({
     name: '',
-    wardId: '',
+    wardId: user?.assignedWardId ? user.assignedWardId.toString() : '',
     availableQuantity: 1,
     minQuantityThreshold: 1
   });
@@ -38,9 +40,11 @@ const AddEquipmentPage = () => {
           : (Array.isArray(response.data) ? response.data : []);
         setWards(wardList);
         
-        if (wardList.length > 0) {
-          setFormData(prev => ({ ...prev, wardId: wardList[0].id.toString() }));
-        }
+        const initialWardId = user?.assignedWardId 
+          ? user.assignedWardId.toString() 
+          : (wardList.length > 0 ? wardList[0].id.toString() : '');
+
+        setFormData(prev => ({ ...prev, wardId: initialWardId }));
       } catch (err) {
         console.error('Error fetching wards:', err);
         setError('Failed to load wards');
@@ -49,7 +53,7 @@ const AddEquipmentPage = () => {
       }
     };
     fetchWards();
-  }, []);
+  }, [user?.assignedWardId]);
 
   const wardOptions = wards.map(w => ({ 
     value: w.id.toString(), 
@@ -101,7 +105,11 @@ const AddEquipmentPage = () => {
   return (
     <FormPageLayout
       title="Register Equipment"
-      subtitle="Add new medical equipment to a ward's inventory."
+      subtitle={
+        user?.assignedWardName 
+          ? `Add new medical equipment to ${user.assignedWardName}.`
+          : "Add new medical equipment to a ward's inventory."
+      }
       icon="🪛"
       backTo="/ward-admin/equipment"
       backLabel="Back to Equipment"
@@ -129,7 +137,8 @@ const AddEquipmentPage = () => {
           onChange={handleChange} 
           options={wardOptions}
           required
-          disabled={isSubmitting}
+          disabled={isSubmitting || Boolean(user?.assignedWardId)}
+          helperText={user?.assignedWardName ? `Locked to ${user.assignedWardName}.` : undefined}
         />
         <FormField 
           id="availableQuantity" 

@@ -4,19 +4,31 @@
 
 const db = require('../../config/db');
 
-const findAlertsByStatus = async (status) => {
+// Find alerts by status, with optional ward filtering
+const findAlertsByStatus = async (status, wardId = null) => {
+  // Query to select all shortage alerts joined with ward and equipment tables
   let sql = `
-    SELECT s.*, w.wardName, e.equipmentName 
+    SELECT s.*, w.wardName, e.equipmentName, COALESCE(s.wardId, e.wardId) as effectiveWardId
     FROM shortageAlertLog s
     LEFT JOIN ward w ON s.wardId = w.id
     LEFT JOIN equipment e ON s.equipmentId = e.id
   `;
   const values = [];
+  const whereClauses = [];
 
   if (status === 'active') {
-    sql += ' WHERE s.resolvedAt IS NULL';
+    whereClauses.push('s.resolvedAt IS NULL');
   } else if (status === 'resolved') {
-    sql += ' WHERE s.resolvedAt IS NOT NULL';
+    whereClauses.push('s.resolvedAt IS NOT NULL');
+  }
+
+  if (wardId) {
+    whereClauses.push('(s.wardId = ? OR e.wardId = ?)');
+    values.push(wardId, wardId);
+  }
+
+  if (whereClauses.length > 0) {
+    sql += ' WHERE ' + whereClauses.join(' AND ');
   }
 
   sql += ' ORDER BY s.triggeredAt DESC';

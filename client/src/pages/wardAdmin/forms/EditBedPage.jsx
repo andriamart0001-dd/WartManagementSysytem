@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../../../api/axiosInstance';
+import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import FormField from '../../../components/ui/FormField';
 import FormPageLayout from '../../../components/ui/FormPageLayout';
@@ -10,13 +11,15 @@ import { BED_STATUS } from '../../../constants';
 // EditBedPage.jsx
 // =============================================================================
 // Purpose:
-//   Ward Admin interface to edit an existing bed (change its number, ward, section, or status).
+//   Ward Admin interface to edit an existing bed in their assigned ward.
+//   Guarantees the Ward Admin can only edit beds within their assigned ward.
 //   Route: GET /ward-admin/beds/:id/edit
 // =============================================================================
 
 const EditBedPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { addToast } = useToast();
 
   const [wards, setWards] = useState([]);
@@ -64,8 +67,15 @@ const EditBedPage = () => {
           return;
         }
 
+        // Security check: Ward Admin can only edit beds in their assigned ward
+        if (user?.assignedWardId && Number(targetBed.wardId) !== Number(user.assignedWardId)) {
+          addToast('Access denied. You can only edit beds in your assigned ward.', 'error');
+          navigate('/ward-admin/beds');
+          return;
+        }
+
         setFormData({
-          wardId: targetBed.wardId?.toString() || '',
+          wardId: targetBed.wardId?.toString() || (user?.assignedWardId ? user.assignedWardId.toString() : ''),
           bedNumber: targetBed.bedNumber || '',
           bedStatus: targetBed.status || targetBed.bedStatus || BED_STATUS.AVAILABLE,
           sectionId: targetBed.sectionId ? targetBed.sectionId.toString() : ''
@@ -80,7 +90,7 @@ const EditBedPage = () => {
     };
     
     fetchData();
-  }, [id, addToast, navigate]);
+  }, [id, addToast, navigate, user?.assignedWardId]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -162,12 +172,13 @@ const EditBedPage = () => {
         <FormField 
           id="wardId" 
           type="select" 
-          label="Assign to Ward" 
+          label="Assigned Ward" 
           value={formData.wardId} 
           onChange={handleChange} 
           options={wardOptions} 
           required 
-          disabled={isSubmitting} 
+          disabled={isSubmitting || Boolean(user?.assignedWardId)}
+          helperText={user?.assignedWardName ? `Locked to ${user.assignedWardName}.` : undefined}
         />
 
         <FormField 

@@ -3,9 +3,19 @@
 // =============================================================================
 
 const wardService = require('./wardService');
+const { ROLES } = require('../../constants');
 
 const getAllWards = async (req, res) => {
   try {
+    // If the logged-in user is a Ward Admin, restrict returned wards strictly to their assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN && req.user.assignedWardId) {
+      const assignedWard = await wardService.getWardById(req.user.assignedWardId);
+      return res.status(200).json({
+        message: 'Wards retrieved successfully',
+        wards: assignedWard ? [assignedWard] : []
+      });
+    }
+
     const wards = await wardService.getAllWards();
     return res.status(200).json({
       message: 'Wards retrieved successfully',
@@ -19,6 +29,15 @@ const getAllWards = async (req, res) => {
 
 const getWardById = async (req, res) => {
   try {
+    // If Ward Admin, they can only view details of their own assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      if (Number(req.params.id) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You can only view details of your assigned ward.' 
+        });
+      }
+    }
+
     const ward = await wardService.getWardById(req.params.id);
     return res.status(200).json({
       message: 'Ward retrieved successfully',
@@ -50,6 +69,15 @@ const createWard = async (req, res) => {
 
 const updateWard = async (req, res) => {
   try {
+    // Ward Admins can only update their own assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      if (!req.user.assignedWardId || Number(req.params.id) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You can only update your assigned ward.' 
+        });
+      }
+    }
+
     const ward = await wardService.updateWard(req.params.id, req.body, req.user.id);
     return res.status(200).json({
       message: 'Ward updated successfully',

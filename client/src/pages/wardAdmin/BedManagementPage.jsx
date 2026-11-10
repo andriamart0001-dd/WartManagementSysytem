@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
 // Shared UI Components
@@ -14,10 +15,11 @@ import FormField from '../../components/ui/FormField';
 // =============================================================================
 // Purpose:
 //   Ward Admin interface to view bed grid, list beds, and mark them for maintenance.
-//   Integrates with GET /beds, PUT /beds/:id/status, GET /wards
+//   Strictly scoped to the Ward Admin's assigned ward.
 // =============================================================================
 
 const BedManagementPage = () => {
+  const { user } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
@@ -25,7 +27,9 @@ const BedManagementPage = () => {
   const [beds, setBeds] = useState([]);
   const [wards, setWards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedWardId, setSelectedWardId] = useState('');
+  const [selectedWardId, setSelectedWardId] = useState(
+    user?.assignedWardId ? user.assignedWardId.toString() : ''
+  );
 
   // ===========================================================================
   // DATA FETCHING
@@ -47,8 +51,10 @@ const BedManagementPage = () => {
       setBeds(bedList);
       setWards(wardList);
       
-      // Select first ward by default if available
-      if (wardList.length > 0 && !selectedWardId) {
+      // If user has an assigned ward, strictly enforce it
+      if (user?.assignedWardId) {
+        setSelectedWardId(user.assignedWardId.toString());
+      } else if (wardList.length > 0 && !selectedWardId) {
         setSelectedWardId(wardList[0].id.toString());
       }
     } catch (error) {
@@ -64,7 +70,7 @@ const BedManagementPage = () => {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line
-  }, []);
+  }, [user?.assignedWardId]);
 
   const bedsArray = Array.isArray(beds) ? beds : [];
   const wardsArray = Array.isArray(wards) ? wards : [];
@@ -74,7 +80,10 @@ const BedManagementPage = () => {
     ? bedsArray.filter(b => b.wardId && b.wardId.toString() === selectedWardId)
     : bedsArray;
 
-  const wardOptions = wardsArray.map(w => ({ value: w.id.toString(), label: w.wardName || w.name }));
+  const wardOptions = wardsArray.map(w => ({ 
+    value: w.id.toString(), 
+    label: w.wardName || w.name 
+  }));
 
   // ===========================================================================
   // BED STATUS HANDLING
@@ -105,28 +114,34 @@ const BedManagementPage = () => {
 
   const getDeptName = (wardId) => {
     const ward = wards.find(w => w.id.toString() === wardId.toString());
-    return ward ? (ward.wardName || ward.name) : 'Unknown';
+    return ward ? (ward.wardName || ward.name) : (user?.assignedWardName || 'Assigned Ward');
   };
 
   return (
     <div className="dashboard-page">
       <PageHeader 
         title="Bed Management" 
-        subtitle="Manage bed availability and maintenance schedules."
+        subtitle={
+          user?.assignedWardName 
+            ? `Manage bed availability and maintenance for ${user.assignedWardName}.`
+            : "Manage bed availability and maintenance schedules."
+        }
         icon="🛏️"
         actionLabel="+ Add New Bed"
         onAction={() => navigate('/ward-admin/beds/new')}
       />
 
-      {/* Ward Filter */}
-      <div style={{ marginBottom: '24px', maxWidth: '300px' }}>
+      {/* Ward Filter (Disabled for Ward Admin to enforce assigned ward) */}
+      <div style={{ marginBottom: '24px', maxWidth: '340px' }}>
         <FormField 
           id="wardFilter"
           type="select"
-          label="Select Ward to View"
+          label={user?.assignedWardName ? `Ward: ${user.assignedWardName}` : "Select Ward to View"}
           value={selectedWardId}
           onChange={(e) => setSelectedWardId(e.target.value)}
           options={wardOptions}
+          disabled={Boolean(user?.assignedWardId)}
+          helperText={user?.assignedWardName ? "You are locked to your assigned ward." : undefined}
         />
       </div>
 
@@ -183,32 +198,31 @@ const BedManagementPage = () => {
                 <StatusBadge status={bed.bedStatus || bed.status} />
               </td>
               <td>
-                <div className="table-actions">
-                  {bed.status === 'available' && (
-                    <button 
-                      className="action-btn" 
-                      title="Mark as Maintenance" 
-                      onClick={() => handleStatusChange(bed.id, 'maintenance')}
-                    >
-                      🔧 Fix
-                    </button>
-                  )}
-                  {bed.status === 'maintenance' && (
-                    <button 
-                      className="action-btn" 
-                      title="Mark as Available" 
-                      onClick={() => handleStatusChange(bed.id, 'available')}
-                    >
-                      ✅ Ready
-                    </button>
-                  )}
-                  <button 
-                    className="action-btn" 
-                    title="Edit Bed" 
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="action-btn"
                     onClick={() => navigate(`/ward-admin/beds/${bed.id}/edit`)}
+                    style={{ fontSize: '12px', padding: '4px 8px' }}
                   >
-                    ✏️ Edit
+                    Edit
                   </button>
+                  {bed.bedStatus === 'available' || bed.status === 'available' ? (
+                    <button 
+                      className="action-btn"
+                      onClick={() => handleStatusChange(bed.id, 'maintenance')}
+                      style={{ fontSize: '12px', padding: '4px 8px', color: '#854d0e', borderColor: '#eab308' }}
+                    >
+                      Maintenance
+                    </button>
+                  ) : bed.bedStatus === 'maintenance' || bed.status === 'maintenance' ? (
+                    <button 
+                      className="action-btn"
+                      onClick={() => handleStatusChange(bed.id, 'available')}
+                      style={{ fontSize: '12px', padding: '4px 8px', color: '#166534', borderColor: '#22c55e' }}
+                    >
+                      Mark Available
+                    </button>
+                  ) : null}
                 </div>
               </td>
             </tr>
@@ -220,4 +234,3 @@ const BedManagementPage = () => {
 };
 
 export default BedManagementPage;
-

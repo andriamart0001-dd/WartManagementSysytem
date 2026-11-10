@@ -1,23 +1,27 @@
+// =============================================================================
+// DischargePage.jsx — Doctor Patient Discharge Request Form
+// =============================================================================
+// Purpose:
+//   Form used by doctors to request discharge for an admitted patient.
+//   Submits a clinical discharge request to /api/requests so that Ward Admins
+//   and Staff Nurses can complete nursing discharge steps and release the bed.
+//   Route: GET /doctor/discharge/new
+// =============================================================================
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { ROLES } from '../../constants';
 import FormField from '../../components/ui/FormField';
 import FormPageLayout from '../../components/ui/FormPageLayout';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 
-// =============================================================================
-// DischargePage.jsx
-// =============================================================================
-// Purpose:
-//   Form used by doctors to discharge a patient.
-//   Shows a ConfirmModal before actually submitting to prevent accidents.
-//   Route: GET /doctor/discharge/new
-// =============================================================================
-
 const DischargePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const { addToast } = useToast();
 
   const preselectedAdmissionId = searchParams.get('admissionId') || '';
@@ -59,7 +63,7 @@ const DischargePage = () => {
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
-  // User clicks "Discharge Patient" — show confirm modal first
+  // User clicks "Discharge Patient" / "Submit Discharge Request"
   const handleDischargeClick = (e) => {
     e.preventDefault();
     if (!formData.admissionId) {
@@ -70,20 +74,33 @@ const DischargePage = () => {
     setIsConfirmOpen(true);
   };
 
-  // User clicks "Confirm" inside the confirm modal — do the actual API call
+  // User clicks "Confirm" inside the confirm modal
   const handleConfirmedDischarge = async () => {
     setIsSubmitting(true);
     try {
-      await axiosInstance.post(`/admissions/${formData.admissionId}/discharge`, {
-        dischargeNotes: formData.dischargeNotes || null
-      });
+      // If user is a Doctor, submit a clinical discharge request to /api/requests
+      if (user?.role === ROLES.DOCTOR) {
+        await axiosInstance.post('/requests', {
+          admissionId: Number(formData.admissionId),
+          requestNotes: formData.dischargeNotes || null
+        });
 
-      setIsConfirmOpen(false);
-      addToast('Patient discharged successfully', 'success');
-      navigate('/doctor');
+        setIsConfirmOpen(false);
+        addToast('Discharge request submitted! Ward staff will review and complete bed release.', 'success');
+        navigate('/doctor/requests');
+      } else {
+        // System Admin or Ward Admin can directly discharge
+        await axiosInstance.post(`/admissions/${formData.admissionId}/discharge`, {
+          dischargeNotes: formData.dischargeNotes || null
+        });
+
+        setIsConfirmOpen(false);
+        addToast('Patient discharged successfully', 'success');
+        navigate(user?.role === ROLES.ADMIN ? '/admin/admissions' : '/ward-admin');
+      }
     } catch (err) {
       console.error('Discharge error:', err);
-      setError(err.response?.data?.message || 'Failed to discharge patient.');
+      setError(err.response?.data?.message || 'Failed to submit discharge request.');
       setIsConfirmOpen(false);
     } finally {
       setIsSubmitting(false);
@@ -101,13 +118,19 @@ const DischargePage = () => {
     label: `${a.patientName} — Ward: ${a.wardName}${a.bedNumber ? ` (Bed ${a.bedNumber})` : ''}`
   }));
 
+  const isDoctorRole = user?.role === ROLES.DOCTOR;
+
   return (
     <>
       <FormPageLayout
-        title="Discharge Patient"
-        subtitle="Process a patient for discharge and free their assigned bed."
+        title={isDoctorRole ? 'Submit Discharge Request' : 'Discharge Patient'}
+        subtitle={
+          isDoctorRole
+            ? 'Request patient discharge. Ward Admin or Staff Nurse will review and complete bed release.'
+            : 'Process patient discharge and free their assigned bed.'
+        }
         icon="🏠"
-        backTo="/doctor"
+        backTo={isDoctorRole ? '/doctor' : '/ward-admin'}
         backLabel="Back to Dashboard"
       >
         <form onSubmit={handleDischargeClick}>
@@ -118,16 +141,18 @@ const DischargePage = () => {
             </div>
           )}
 
-          {/* Warning notice */}
+          {/* Workflow notice */}
           <div style={{
             marginBottom: '20px',
             padding: '12px',
-            backgroundColor: '#fff7ed',
+            backgroundColor: isDoctorRole ? '#eff6ff' : '#fff7ed',
             borderRadius: '8px',
-            border: '1px solid #fdba74'
+            border: isDoctorRole ? '1px solid #bfdbfe' : '1px solid #fdba74'
           }}>
-            <p style={{ margin: 0, fontSize: '13px', color: '#c2410c', fontWeight: 600 }}>
-              ⚠️ This action will permanently discharge the patient and free their assigned bed.
+            <p style={{ margin: 0, fontSize: '13px', color: isDoctorRole ? '#1d4ed8' : '#c2410c', fontWeight: 600 }}>
+              {isDoctorRole 
+                ? 'ℹ️ Submitting this form creates a pending discharge request. Ward Admin or Staff Nurse will verify medications/paperwork and release the bed.' 
+                : '⚠️ This action will permanently discharge the patient and immediately free their assigned bed.'}
             </p>
           </div>
 
@@ -143,22 +168,22 @@ const DischargePage = () => {
             disabled={isSubmitting || !!preselectedAdmissionId}
           />
 
-          {/* Discharge Notes */}
+          {/* Discharge Clinical Notes */}
           <FormField
             id="dischargeNotes"
             type="textarea"
-            label="Discharge Notes (Optional)"
+            label="Clinical Discharge Notes & Instructions"
             value={formData.dischargeNotes}
             onChange={handleChange}
             disabled={isSubmitting}
-            placeholder="e.g. Patient recovered fully. Prescribed medication for follow-up."
+            placeholder="e.g. Condition stabilized. Prescribed amoxicillin 500mg for 5 days. Follow-up clinic in 2 weeks."
           />
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
             <button 
               type="button" 
               className="cancelBtn no-bg" 
-              onClick={() => navigate('/doctor')} 
+              onClick={() => navigate(isDoctorRole ? '/doctor' : '/ward-admin')} 
               disabled={isSubmitting} 
               style={{ padding: '10px 16px', cursor: 'pointer', border: '1px solid #cbd5e1', borderRadius: '8px' }}
             >
@@ -168,23 +193,29 @@ const DischargePage = () => {
               type="submit" 
               className="submit-button" 
               disabled={isSubmitting} 
-              style={{ width: 'auto', marginTop: 0, backgroundColor: 'var(--status-occupied)' }}
+              style={{ width: 'auto', marginTop: 0, backgroundColor: isDoctorRole ? '#2563eb' : 'var(--status-occupied)' }}
             >
-              {isSubmitting ? 'Processing...' : '🏠 Discharge Patient'}
+              {isSubmitting 
+                ? 'Processing...' 
+                : (isDoctorRole ? '📋 Submit Discharge Request' : '🏠 Discharge Patient')}
             </button>
           </div>
         </form>
       </FormPageLayout>
 
-      {/* Confirm Modal — requires explicit click to proceed */}
+      {/* Confirm Modal */}
       <ConfirmModal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleConfirmedDischarge}
-        title="Confirm Patient Discharge"
-        message={`Are you sure you want to discharge ${selectedPatientName}? This will free their bed and cannot be undone.`}
-        confirmText="Yes, Discharge"
-        isDanger={true}
+        title={isDoctorRole ? 'Confirm Discharge Request' : 'Confirm Patient Discharge'}
+        message={
+          isDoctorRole
+            ? `Submit discharge request for ${selectedPatientName}? Ward nursing staff will be notified to review and release the bed.`
+            : `Are you sure you want to discharge ${selectedPatientName}? This will free their bed immediately.`
+        }
+        confirmText={isDoctorRole ? 'Yes, Submit Request' : 'Yes, Discharge'}
+        isDanger={!isDoctorRole}
         isLoading={isSubmitting}
       />
     </>

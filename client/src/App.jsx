@@ -21,6 +21,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import LoginPage from './pages/auth/LoginPage';
 import UnauthorizedPage from './pages/auth/UnauthorizedPage';
 import ForcePasswordChange from './pages/auth/ForcePasswordChange';
+import ProfilePage from './pages/auth/ProfilePage';
 
 // Role-Based Dashboards & Pages
 // 1. Admin
@@ -32,6 +33,7 @@ import HospitalManagementPage from './pages/admin/HospitalManagementPage';
 import AlertManagementPage from './pages/admin/AlertManagementPage';
 import AdmissionHistoryPage from './pages/admin/AdmissionHistoryPage';
 import PatientManagementPage from './pages/admin/PatientManagementPage';
+import TransferHistoryPage from './pages/admin/TransferHistoryPage';
 import PatientRegistrationPage from './pages/staff/PatientRegistrationPage';
 import AddUserPage from './pages/admin/forms/AddUserPage';
 import EditUserPage from './pages/admin/forms/EditUserPage';
@@ -62,6 +64,7 @@ import InternalTransferPage from './pages/staff/InternalTransferPage';
 import ExternalTransferPage from './pages/staff/ExternalTransferPage';
 import ReturnPatientPage from './pages/staff/ReturnPatientPage';
 import LogVitalsPage from './pages/staff/LogVitalsPage';
+import ClinicalRequestsPage from './pages/staff/ClinicalRequestsPage';
 
 // 6. Doctor
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
@@ -112,6 +115,12 @@ function App() {
                   <AppLayout />
                 </ErrorBoundary>
               }>
+
+                {/* 0. User Profile & Security Settings (All Staff Roles) */}
+                <Route
+                  path="/profile"
+                  element={<ProfilePage />}
+                />
 
                 {/* 1. Admin Role Dashboard & Pages */}
                 <Route
@@ -195,6 +204,22 @@ function App() {
                   }
                 />
                 <Route
+                  path="/admin/requests"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <ClinicalRequestsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/transfers"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <TransferHistoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/admin/admissions"
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.DOCTOR]}>
@@ -217,6 +242,22 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
                       <WardAdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ward-admin/requests"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
+                      <ClinicalRequestsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/ward-admin/transfers"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.WARD_ADMIN]}>
+                      <TransferHistoryPage />
                     </ProtectedRoute>
                   }
                 />
@@ -335,6 +376,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/admission-doctor/transfers/history"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR]}>
+                      <TransferHistoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/admission-doctor/vitals/new"
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR]}>
@@ -349,6 +398,22 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.NURSE]}>
                       <NurseDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/nurse/requests"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.NURSE]}>
+                      <ClinicalRequestsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/nurse/transfers/history"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.NURSE]}>
+                      <TransferHistoryPage />
                     </ProtectedRoute>
                   }
                 />
@@ -393,12 +458,28 @@ function App() {
                   }
                 />
 
-                {/* 5. Legacy /staff Routes (Preserved for compatibility, with Nurse removed from Admit & Register) */}
+                {/* 5. Legacy /staff Routes (Preserved for compatibility) */}
                 <Route
                   path="/staff"
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
                       <StaffDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/staff/requests"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.NURSE, ROLES.DOCTOR]}>
+                      <ClinicalRequestsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/staff/transfers/history"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE]}>
+                      <TransferHistoryPage />
                     </ProtectedRoute>
                   }
                 />
@@ -465,6 +546,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.DOCTOR]}>
                       <DoctorDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/doctor/requests"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.DOCTOR]}>
+                      <ClinicalRequestsPage />
                     </ProtectedRoute>
                   }
                 />

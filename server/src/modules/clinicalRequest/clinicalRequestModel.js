@@ -28,6 +28,7 @@ const findAllRequests = async ({ status, requestedBy, wardId } = {}) => {
       p.patientNIC,
       pa.wardId,
       pa.bedId,
+      pa.status AS admissionStatus,
       w.wardName,
       b.bedNumber,
       uReq.fullName AS requestedByName,

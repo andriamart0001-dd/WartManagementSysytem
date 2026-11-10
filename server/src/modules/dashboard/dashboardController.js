@@ -6,7 +6,7 @@ const dashboardService = require('./dashboardService');
 
 const getSummary = async (req, res) => {
   try {
-    const data = await dashboardService.getDashboardSummary();
+    const data = await dashboardService.getDashboardSummary(req.user);
     return res.status(200).json({
       message: 'Dashboard summary retrieved successfully',
       data

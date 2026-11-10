@@ -14,7 +14,8 @@ import AlertBanner from '../../components/ui/AlertBanner';
 // =============================================================================
 // Purpose:
 //   Ward Administrator Dashboard View.
-//   Fetches live stats from /api/dashboard/summary.
+//   Displays live statistics strictly for the Ward Admin's assigned ward,
+//   including pending discharge requests, bed availability, and shortage alerts.
 // =============================================================================
 
 const WardAdminDashboard = () => {
@@ -22,9 +23,10 @@ const WardAdminDashboard = () => {
   const { addToast } = useToast();
   
   const [stats, setStats] = useState({
-    totalWards: 0,
+    assignedWardName: '',
     totalBeds: 0,
-    activeAlerts: 0
+    activeAlerts: 0,
+    pendingRequests: 0
   });
   const [shortages, setShortages] = useState({ wards: [], equipment: [] });
   const [isLoading, setIsLoading] = useState(true);
@@ -32,23 +34,26 @@ const WardAdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
-        const [summaryRes, wardsRes] = await Promise.allSettled([
+        const [summaryRes, wardsRes, requestsRes] = await Promise.allSettled([
           axiosInstance.get('/dashboard/summary'),
-          axiosInstance.get('/wards')
+          axiosInstance.get('/wards'),
+          axiosInstance.get('/requests/pending-count')
         ]);
 
         const summaryData = summaryRes.status === 'fulfilled' ? (summaryRes.value.data?.data || summaryRes.value.data) : {};
         const wardsList = wardsRes.status === 'fulfilled' ? (wardsRes.value.data?.wards || wardsRes.value.data) : [];
+        const pendingCount = requestsRes.status === 'fulfilled' ? (requestsRes.value.data?.count || 0) : 0;
 
-        const totalWards = Array.isArray(wardsList) ? wardsList.length : (summaryData.totalWards || 0);
+        const assignedWard = Array.isArray(wardsList) && wardsList.length > 0 ? wardsList[0].wardName : (user?.assignedWardName || 'Assigned Ward');
         const totalBeds = summaryData.bedStats?.total || summaryData.totalBeds || 0;
         const wardShortageCount = Array.isArray(summaryData.shortages?.wards) ? summaryData.shortages.wards.length : 0;
         const equipShortageCount = Array.isArray(summaryData.shortages?.equipment) ? summaryData.shortages.equipment.length : 0;
 
         setStats({
-          totalWards,
+          assignedWardName: assignedWard,
           totalBeds,
-          activeAlerts: wardShortageCount + equipShortageCount || summaryData.activeAlerts || 0
+          activeAlerts: wardShortageCount + equipShortageCount || summaryData.activeAlerts || 0,
+          pendingRequests: pendingCount
         });
 
         if (summaryData.shortages) {
@@ -66,13 +71,17 @@ const WardAdminDashboard = () => {
     };
 
     fetchDashboardStats();
-  }, [addToast]);
+  }, [addToast, user?.assignedWardName]);
 
   return (
     <div className="dashboard-page">
       <PageHeader 
         title="Ward Admin Dashboard" 
-        subtitle={`Welcome back, ${user?.fullName}. Manage your ward's operations and equipment.`}
+        subtitle={
+          user?.assignedWardName 
+            ? `Welcome back, ${user?.fullName}. Managing assigned ward: ${user?.assignedWardName}.`
+            : `Welcome back, ${user?.fullName}. Manage your ward's operations and equipment.`
+        }
         icon="🛌"
       />
 
@@ -95,17 +104,23 @@ const WardAdminDashboard = () => {
       {/* KPI Cards Grid */}
       <div className="dashboard-cards-grid" style={{ marginBottom: '40px' }}>
         <StatCard 
-          title="Total Wards" 
-          value={isLoading ? '...' : stats.totalWards} 
+          title="Assigned Ward" 
+          value={isLoading ? '...' : (stats.assignedWardName || user?.assignedWardName || 'Ward')} 
           icon="🏥" 
         />
         <StatCard 
-          title="Total Beds" 
+          title="Total Ward Beds" 
           value={isLoading ? '...' : stats.totalBeds} 
           icon="🛏️" 
         />
         <StatCard 
-          title="Shortage Alerts" 
+          title="Pending Discharge Requests" 
+          value={isLoading ? '...' : stats.pendingRequests} 
+          icon="📋"
+          type={stats.pendingRequests > 0 ? 'maintenance' : 'default'}
+        />
+        <StatCard 
+          title="Ward Shortage Alerts" 
           value={isLoading ? '...' : stats.activeAlerts} 
           icon="🚨"
           type={stats.activeAlerts > 0 ? 'shortage' : 'default'}
@@ -113,8 +128,20 @@ const WardAdminDashboard = () => {
       </div>
 
       {/* Quick Links Section */}
-      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Ward Management</h2>
+      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Ward Management Operations</h2>
       <div className="dashboard-cards-grid">
+        <Link to="/ward-admin/requests" style={{ textDecoration: 'none' }}>
+          <div className="dash-card" style={{ cursor: 'pointer', borderLeft: stats.pendingRequests > 0 ? '4px solid #f59e0b' : '4px solid #3b82f6' }}>
+            <div className="card-header">
+              <span className="card-icon">📋</span>
+              <h3>Discharge Requests {stats.pendingRequests > 0 && `(${stats.pendingRequests})`}</h3>
+            </div>
+            <p className="card-description">
+              Review doctor discharge requests and authorize patient departure and bed release.
+            </p>
+          </div>
+        </Link>
+
         <Link to="/ward-admin/beds" style={{ textDecoration: 'none' }}>
           <div className="dash-card" style={{ cursor: 'pointer' }}>
             <div className="card-header">
@@ -123,6 +150,18 @@ const WardAdminDashboard = () => {
             </div>
             <p className="card-description">
               View bed grid, mark beds for maintenance, and check availability.
+            </p>
+          </div>
+        </Link>
+
+        <Link to="/ward-admin/sections" style={{ textDecoration: 'none' }}>
+          <div className="dash-card" style={{ cursor: 'pointer' }}>
+            <div className="card-header">
+              <span className="card-icon">📂</span>
+              <h3>Ward Sections</h3>
+            </div>
+            <p className="card-description">
+              Organize beds into bays, isolation rooms, and patient units.
             </p>
           </div>
         </Link>

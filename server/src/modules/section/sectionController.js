@@ -7,12 +7,30 @@
 // =============================================================================
 
 const sectionService = require('./sectionService');
+const { ROLES } = require('../../constants');
 
 // This handler gets all sections, optionally filtered by wardId (?wardId=1)
+// For Ward Admins, it restricts the query to their assigned ward
 const getSections = async (req, res) => {
   try {
-    const wardId = req.query.wardId;
-    const sections = await sectionService.getSections(wardId);
+    let targetWardId = req.query.wardId;
+
+    // Ward Admins can only view sections in their assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      if (!req.user.assignedWardId) {
+        return res.status(403).json({ 
+          message: 'Access denied. You do not have an assigned ward.' 
+        });
+      }
+      if (targetWardId && Number(targetWardId) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You are only authorized to view sections in your assigned ward.' 
+        });
+      }
+      targetWardId = req.user.assignedWardId;
+    }
+
+    const sections = await sectionService.getSections(targetWardId);
 
     return res.status(200).json({
       message: 'Sections retrieved successfully',
@@ -33,6 +51,15 @@ const getSectionById = async (req, res) => {
     const sectionId = req.params.id;
     const section = await sectionService.getSectionById(sectionId);
 
+    // Ward Admins can only view sections within their assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      if (Number(section.wardId) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You are only authorized to view sections in your assigned ward.' 
+        });
+      }
+    }
+
     return res.status(200).json({
       message: 'Section retrieved successfully',
       section: section
@@ -51,6 +78,15 @@ const getSectionById = async (req, res) => {
 // This handler creates a new section (POST /api/sections)
 const createSection = async (req, res) => {
   try {
+    // Ward Admins can only create sections in their own assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      if (!req.user.assignedWardId || Number(req.body.wardId) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You can only create sections in your assigned ward.' 
+        });
+      }
+    }
+
     const userId = req.user.id;
     const newSection = await sectionService.createSection(req.body, userId);
 
@@ -80,6 +116,20 @@ const updateSection = async (req, res) => {
   try {
     const sectionId = req.params.id;
     const userId = req.user.id;
+
+    // Ward Admins can only update sections within their assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      const existingSection = await sectionService.getSectionById(sectionId);
+      if (!existingSection) {
+        return res.status(404).json({ message: 'Section not found' });
+      }
+      if (Number(existingSection.wardId) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You can only edit sections in your assigned ward.' 
+        });
+      }
+    }
+
     const updatedSection = await sectionService.updateSection(sectionId, req.body, userId);
 
     return res.status(200).json({
@@ -107,6 +157,20 @@ const updateSection = async (req, res) => {
 const deleteSection = async (req, res) => {
   try {
     const sectionId = req.params.id;
+
+    // Ward Admins can only delete sections within their assigned ward
+    if (req.user && req.user.role === ROLES.WARD_ADMIN) {
+      const existingSection = await sectionService.getSectionById(sectionId);
+      if (!existingSection) {
+        return res.status(404).json({ message: 'Section not found' });
+      }
+      if (Number(existingSection.wardId) !== Number(req.user.assignedWardId)) {
+        return res.status(403).json({ 
+          message: 'Access denied. You can only delete sections in your assigned ward.' 
+        });
+      }
+    }
+
     await sectionService.deleteSection(sectionId);
 
     return res.status(200).json({

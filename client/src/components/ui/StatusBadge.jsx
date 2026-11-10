@@ -21,13 +21,16 @@ const StatusBadge = ({ status }) => {
     switch (normalized) {
       case 'available':
       case 'active':
+      case 'approved':
         return 'status-badge status-available';
       case 'occupied':
       case 'in use':
       case 'in-use':
+      case 'rejected':
         return 'status-badge status-occupied';
       case 'maintenance':
       case 'warning':
+      case 'pending':
         return 'status-badge status-maintenance';
       case 'admitted':
         return 'status-badge status-admitted';
