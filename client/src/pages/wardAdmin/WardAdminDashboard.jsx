@@ -15,14 +15,14 @@ import StatCard from '../../components/ui/StatCard';
 //   Ward Administrator Dashboard View.
 //   Displays live statistics strictly for the Ward Admin's assigned ward,
 //   including pending discharge requests, bed availability, and shortage alerts.
-//   Note: Direct in-page shortage banners have been moved to the top-bar notification
-//   bell and Alert Center page to keep the dashboard clean.
 // =============================================================================
 
 const WardAdminDashboard = () => {
+  // Grab current authenticated ward admin details
   const { user } = useAuth();
   const { addToast } = useToast();
   
+  // Dashboard state for ward admin metrics
   const [stats, setStats] = useState({
     assignedWardName: '',
     totalBeds: 0,
@@ -31,6 +31,15 @@ const WardAdminDashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Formatted date string for the student project welcome banner
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  // Fetch metrics from backend endpoints
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
@@ -69,108 +78,160 @@ const WardAdminDashboard = () => {
 
   return (
     <div className="dashboard-page">
+      {/* Top Header */}
       <PageHeader 
         title="Ward Admin Dashboard" 
-        subtitle={
-          user?.assignedWardName 
-            ? `Welcome back, ${user?.fullName}. Managing assigned ward: ${user?.assignedWardName}.`
-            : `Welcome back, ${user?.fullName}. Manage your ward's operations and equipment.`
-        }
+        subtitle="Ward Operations, Bed Allocations & Resource Management"
         icon="🛌"
       />
 
-      {/* KPI Cards Grid */}
-      <div className="dashboard-cards-grid" style={{ marginBottom: '40px' }}>
+      {/* University Project Welcome Banner Strip */}
+      <div className="dashboard-welcome-strip">
+        <div className="welcome-strip-left">
+          <div className="welcome-strip-avatar">🛌</div>
+          <div className="welcome-strip-text">
+            <h3>Welcome back, {user?.fullName || 'Ward Admin'}</h3>
+            <p>
+              Ward Administrator • Managing: <strong>{stats.assignedWardName || user?.assignedWardName || 'Ward Unit'}</strong>
+            </p>
+          </div>
+        </div>
+        <div className="welcome-strip-right">
+          <span>📅 {currentDate}</span>
+        </div>
+      </div>
+
+      {/* Section 1: KPI Statistics Grid */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>📊</span> Ward Status & Real-Time Metrics
+        </h2>
+      </div>
+
+      <div className="dashboard-cards-grid" style={{ marginBottom: '32px' }}>
         <StatCard 
           title="Assigned Ward" 
           value={isLoading ? '...' : (stats.assignedWardName || user?.assignedWardName || 'Ward')} 
           icon="🏥" 
+          description="Designated clinical care area"
         />
         <StatCard 
           title="Total Ward Beds" 
           value={isLoading ? '...' : stats.totalBeds} 
           icon="🛏️" 
+          description="Physical beds configured in ward"
         />
-        <Link to="/ward-admin/requests" style={{ textDecoration: 'none' }}>
-          <StatCard 
-            title="Pending Discharges" 
-            value={isLoading ? '...' : stats.pendingRequests} 
-            icon="📋"
-            type={stats.pendingRequests > 0 ? 'maintenance' : 'default'}
-          />
-        </Link>
-        <Link to="/alerts" style={{ textDecoration: 'none' }}>
-          <StatCard 
-            title="Ward Shortages" 
-            value={isLoading ? '...' : stats.activeAlerts} 
-            icon="🚨"
-            type={stats.activeAlerts > 0 ? 'shortage' : 'default'}
-          />
-        </Link>
+        <StatCard 
+          title="Pending Discharges" 
+          value={isLoading ? '...' : stats.pendingRequests} 
+          icon="📋"
+          type={stats.pendingRequests > 0 ? 'maintenance' : 'default'}
+          description={stats.pendingRequests > 0 ? 'Doctor clearance pending approval' : 'No pending discharges'}
+          to="/ward-admin/requests"
+        />
+        <StatCard 
+          title="Ward Shortages" 
+          value={isLoading ? '...' : stats.activeAlerts} 
+          icon="🚨"
+          type={stats.activeAlerts > 0 ? 'shortage' : 'default'}
+          description={stats.activeAlerts > 0 ? 'Resource threshold exceeded' : 'Normal equipment & bed levels'}
+          to="/alerts"
+        />
       </div>
 
-      {/* Quick Links Section */}
-      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Ward Management Operations</h2>
-      <div className="dashboard-cards-grid">
-        <Link to="/ward-admin/requests" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer', borderLeft: stats.pendingRequests > 0 ? '4px solid #f59e0b' : '4px solid #3b82f6' }}>
-            <div className="card-header">
-              <span className="card-icon">📋</span>
-              <h3>Discharge Requests {stats.pendingRequests > 0 && `(${stats.pendingRequests})`}</h3>
-            </div>
-            <p className="card-description">
-              Review doctor discharge requests and authorize patient departure and bed release.
-            </p>
-          </div>
-        </Link>
+      {/* Section 2: Ward Operations Categorized */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>🛠️</span> Ward Management Operations
+        </h2>
+      </div>
 
-        <Link to="/ward-admin/beds" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer' }}>
-            <div className="card-header">
-              <span className="card-icon">🛏️</span>
-              <h3>Manage Beds</h3>
+      {/* Group 1: Patient Care & Beds */}
+      <div className="action-group">
+        <div className="action-group-title">
+          <span>🛏️</span> Patient Care & Bed Management
+        </div>
+        <div className="quick-actions-grid">
+          <Link 
+            to="/ward-admin/requests" 
+            className={`quick-action-card ${stats.pendingRequests > 0 ? 'highlight-amber' : ''}`}
+          >
+            <div className="quick-action-icon">📋</div>
+            <div className="quick-action-content">
+              <h4>
+                Discharge Requests
+                {stats.pendingRequests > 0 && (
+                  <span className="badge-counter amber">{stats.pendingRequests}</span>
+                )}
+              </h4>
+              <p>Approve or decline doctor discharge orders</p>
             </div>
-            <p className="card-description">
-              View bed grid, mark beds for maintenance, and check availability.
-            </p>
-          </div>
-        </Link>
+          </Link>
 
-        <Link to="/ward-admin/sections" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer' }}>
-            <div className="card-header">
-              <span className="card-icon">📂</span>
-              <h3>Ward Sections</h3>
+          <Link to="/ward-admin/beds" className="quick-action-card">
+            <div className="quick-action-icon">🛏️</div>
+            <div className="quick-action-content">
+              <h4>Manage Beds</h4>
+              <p>View occupancy grid & set maintenance</p>
             </div>
-            <p className="card-description">
-              Organize beds into bays, isolation rooms, and patient units.
-            </p>
-          </div>
-        </Link>
+          </Link>
 
-        <Link to="/ward-admin/equipment" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer' }}>
-            <div className="card-header">
-              <span className="card-icon">🪛</span>
-              <h3>Equipment Inventory</h3>
+          <Link to="/ward-admin/sections" className="quick-action-card">
+            <div className="quick-action-icon">📂</div>
+            <div className="quick-action-content">
+              <h4>Ward Sections</h4>
+              <p>Organize bays, rooms, and isolation units</p>
             </div>
-            <p className="card-description">
-              Manage medical equipment quantities and log maintenance.
-            </p>
-          </div>
-        </Link>
+          </Link>
 
-        <Link to="/alerts" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer', borderLeft: stats.activeAlerts > 0 ? '4px solid #ef4444' : undefined }}>
-            <div className="card-header">
-              <span className="card-icon">🚨</span>
-              <h3>Shortage Alerts {stats.activeAlerts > 0 && `(${stats.activeAlerts})`}</h3>
+          <Link to="/admin/patients" className="quick-action-card">
+            <div className="quick-action-icon">🗂️</div>
+            <div className="quick-action-content">
+              <h4>Patient Directory</h4>
+              <p>Search all current and discharged patients</p>
             </div>
-            <p className="card-description">
-              View and resolve active shortage alerts and equipment threshold warnings.
-            </p>
-          </div>
-        </Link>
+          </Link>
+        </div>
+      </div>
+
+      {/* Group 2: Equipment & Audits */}
+      <div className="action-group">
+        <div className="action-group-title">
+          <span>🪛</span> Equipment & History
+        </div>
+        <div className="quick-actions-grid">
+          <Link to="/ward-admin/equipment" className="quick-action-card">
+            <div className="quick-action-icon">🪛</div>
+            <div className="quick-action-content">
+              <h4>Equipment Inventory</h4>
+              <p>Quantities, maintenance logs & thresholds</p>
+            </div>
+          </Link>
+
+          <Link 
+            to="/alerts" 
+            className={`quick-action-card ${stats.activeAlerts > 0 ? 'highlight-red' : ''}`}
+          >
+            <div className="quick-action-icon">🚨</div>
+            <div className="quick-action-content">
+              <h4>
+                Shortage Alerts
+                {stats.activeAlerts > 0 && (
+                  <span className="badge-counter">{stats.activeAlerts}</span>
+                )}
+              </h4>
+              <p>Active bed and equipment shortage logs</p>
+            </div>
+          </Link>
+
+          <Link to="/ward-admin/transfers" className="quick-action-card">
+            <div className="quick-action-icon">🔄</div>
+            <div className="quick-action-content">
+              <h4>Transfer History</h4>
+              <p>Review internal and external ward transfers</p>
+            </div>
+          </Link>
+        </div>
       </div>
 
     </div>

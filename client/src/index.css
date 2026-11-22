@@ -890,3 +890,408 @@ button {
   30% { transform: rotate(-6deg); }
   35% { transform: rotate(0deg); }
 }
+
+
+/* -----------------------------------------------------------------------------
+   7. DASHBOARD UI ENHANCEMENTS (BEGINNER / STUDENT FRIENDLY)
+   ----------------------------------------------------------------------------- */
+.card-description-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Welcome Strip Banner */
+.dashboard-welcome-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid var(--primary);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 24px;
+}
+
+.welcome-strip-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.welcome-strip-avatar {
+  font-size: 22px;
+  width: 42px;
+  height: 42px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.welcome-strip-text h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.welcome-strip-text p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.welcome-strip-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #475569;
+}
+
+/* Section Header Dividers */
+.dashboard-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 28px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dashboard-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+/* Action Group for categorizing dashboard buttons */
+.action-group {
+  margin-bottom: 24px;
+}
+
+.action-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Compact Quick Action Cards Grid */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.quick-action-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: #3b82f6;
+}
+
+.quick-action-card.highlight-amber {
+  background-color: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.quick-action-card.highlight-blue {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.quick-action-card.highlight-red {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+}
+
+.quick-action-icon {
+  font-size: 22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background-color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quick-action-card.highlight-amber .quick-action-icon {
+  background-color: #fef3c7;
+}
+
+.quick-action-card.highlight-blue .quick-action-icon {
+  background-color: #dbeafe;
+}
+
+.quick-action-card.highlight-red .quick-action-icon {
+  background-color: #fee2e2;
+}
+
+.quick-action-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-action-content h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quick-action-content p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 3px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge-counter {
+  background-color: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.badge-counter.amber {
+  background-color: #d97706;
+}
+
+
+/* -----------------------------------------------------------------------------
+   8. ENHANCED STAT CARDS & DASHBOARD KPI GRID (POLISHED & MODERN)
+   ----------------------------------------------------------------------------- */
+.dashboard-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+/* Base Stat Card */
+.dash-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-decoration: none !important;
+  color: inherit !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 125px;
+  box-sizing: border-box;
+}
+
+/* Disable old absolute overlay */
+.dash-card::before {
+  display: none !important;
+}
+
+.dash-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+}
+
+.dash-card.is-clickable {
+  cursor: pointer;
+}
+
+.dash-card.is-clickable:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+}
+
+/* Card Header (Title on left, icon on right) */
+.dash-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.dash-card .card-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-card .card-icon {
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.dash-card:hover .card-icon {
+  transform: scale(1.05);
+}
+
+/* Card Big Number */
+.dash-card .card-number {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.1;
+  margin: 6px 0 10px 0;
+}
+
+/* Card Footer & Description */
+.dash-card .card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px dashed #f1f5f9;
+}
+
+.dash-card .card-description-sub {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.dash-card .card-link-arrow {
+  font-size: 14px;
+  color: #94a3b8;
+  font-weight: 700;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.dash-card.is-clickable:hover .card-link-arrow {
+  transform: translateX(3px);
+  color: #2563eb;
+}
+
+/* Anchor tag overrides */
+a.dash-card, a.dash-card:visited, a.dash-card:hover, a.dash-card:active {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+/* Card Type Variants */
+.dash-card.card-available {
+  border-left-color: #10b981;
+}
+.dash-card.card-available .card-icon {
+  background-color: #d1fae5;
+}
+
+.dash-card.card-occupied {
+  border-left-color: #3b82f6;
+}
+.dash-card.card-occupied .card-icon {
+  background-color: #dbeafe;
+}
+
+.dash-card.card-maintenance {
+  border-left-color: #f59e0b;
+}
+.dash-card.card-maintenance .card-icon {
+  background-color: #fef3c7;
+}
+
+.dash-card.card-shortage {
+  border-left-color: #ef4444;
+}
+.dash-card.card-shortage .card-icon {
+  background-color: #fee2e2;
+}
+
+/* Active Alert State (Shortages / Thresholds exceeded) */
+.dash-card.card-shortage.has-alert {
+  background-color: #fffbfb;
+  border-color: #fca5a5;
+  border-left-color: #dc2626;
+  border-left-width: 5px;
+}
+.dash-card.card-shortage.has-alert .card-number {
+  color: #b91c1c;
+}
+.dash-card.card-shortage.has-alert .card-description-sub {
+  color: #b91c1c;
+  font-weight: 600;
+}
+.dash-card.card-shortage.has-alert .card-icon {
+  background-color: #fee2e2;
+  animation: pulse-border 1.5s infinite;
+}
+
+/* Maintenance Active State */
+.dash-card.card-maintenance.has-alert {
+  background-color: #fffdf5;
+  border-color: #fcd34d;
+  border-left-color: #d97706;
+  border-left-width: 5px;
+}
+.dash-card.card-maintenance.has-alert .card-number {
+  color: #b45309;
+}
+.dash-card.card-maintenance.has-alert .card-description-sub {
+  color: #b45309;
+  font-weight: 600;
+}

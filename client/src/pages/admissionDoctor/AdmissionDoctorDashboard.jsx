@@ -3,12 +3,12 @@
 // =============================================================================
 // Purpose:
 //   Primary dashboard for Admission Doctors.
-//   Allows admission doctors to admit patients, register new patients,
-//   manage internal/external transfers, and log patient vitals.
+//   Allows admission doctors to register patients, perform formal hospital admissions,
+//   manage internal/external patient transfers, and log patient vitals.
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -17,6 +17,7 @@ import { useToast } from '../../context/ToastContext';
 import PageHeader from '../../components/ui/PageHeader';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
+import StatCard from '../../components/ui/StatCard';
 import QRPrintModal from '../../components/ui/QRPrintModal';
 import QRScannerModal from '../../components/ui/QRScannerModal';
 
@@ -37,6 +38,14 @@ const AdmissionDoctorDashboard = () => {
 
   // State to toggle the QR Scanner Camera Modal
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  // Formatted date string for the student project welcome banner
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
 
   // This function fetches all active admitted patients from the server
   const fetchAdmissions = async () => {
@@ -85,76 +94,160 @@ const AdmissionDoctorDashboard = () => {
       {/* Header section with Admit Patient primary action button */}
       <PageHeader 
         title="Admission Doctor Dashboard" 
-        subtitle={`Welcome back, Dr. ${user?.fullName || 'Doctor'}.`}
+        subtitle="Patient Registration, Hospital Admission & Intake Operations"
         icon="🩺"
         actionLabel="+ Admit Patient"
         onAction={() => navigate('/admission-doctor/admit')}
       />
 
-      {/* Quick Action Buttons Row */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#0284c7', color: '#ffffff', border: '1px solid #0284c7', fontWeight: 600 }} 
-          onClick={() => navigate('/admission-doctor/patients/new')}
-        >
-          ➕ Register Patient
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/admission-doctor/lookup')}
-        >
-          🔍 Patient Lookup
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/admin/patients')}
-        >
-          🗂️ Patient Directory
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => setIsScannerOpen(true)}
-        >
-          📷 Scan QR
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/admission-doctor/transfers/internal/new')}
-        >
-          🔄 Internal Transfer
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/admission-doctor/transfers/external/new')}
-        >
-          🚑 External Transfer
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/admission-doctor/transfers/external/return')}
-        >
-          🏥 Return Patient
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/admission-doctor/vitals/new')}
-        >
-          🩸 Log Vitals
-        </button>
+      {/* University Project Welcome Banner Strip */}
+      <div className="dashboard-welcome-strip">
+        <div className="welcome-strip-left">
+          <div className="welcome-strip-avatar">🩺</div>
+          <div className="welcome-strip-text">
+            <h3>Welcome back, Dr. {user?.fullName || 'Doctor'}</h3>
+            <p>Admission Medical Officer • Inpatient Intake & Bed Allocations</p>
+          </div>
+        </div>
+        <div className="welcome-strip-right">
+          <span>📅 {currentDate}</span>
+        </div>
       </div>
 
-      {/* Active Admitted Patients Table */}
-      <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: '#0f172a' }}>
-        Active Admitted Patients
-      </h3>
+      {/* Section 1: KPI Statistics Grid */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>📊</span> Admission & Ward Intake Metrics
+        </h2>
+      </div>
+
+      <div className="dashboard-cards-grid" style={{ marginBottom: '32px' }}>
+        <StatCard 
+          title="Active Inpatients" 
+          value={isLoading ? '...' : admissions.length} 
+          icon="👥"
+          description="Patients currently admitted across hospital wards"
+        />
+        <StatCard 
+          title="Intake Authority" 
+          value="Admissions" 
+          icon="🩺"
+          description="Authorized for patient registration & ward admissions"
+        />
+      </div>
+
+      {/* Section 2: Grouped Operations */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>⚡</span> Intake & Clinical Operations
+        </h2>
+      </div>
+
+      {/* Group 1: Registration & Admissions */}
+      <div className="action-group">
+        <div className="action-group-title">
+          <span>📝</span> Patient Registration & Admissions
+        </div>
+        <div className="quick-actions-grid">
+          <Link to="/admission-doctor/patients/new" className="quick-action-card highlight-blue">
+            <div className="quick-action-icon">➕</div>
+            <div className="quick-action-content">
+              <h4>Register Patient</h4>
+              <p>Create new patient record with NIC / Guardian</p>
+            </div>
+          </Link>
+
+          <Link to="/admission-doctor/admit" className="quick-action-card highlight-blue">
+            <div className="quick-action-icon">📝</div>
+            <div className="quick-action-content">
+              <h4>Admit Patient</h4>
+              <p>Assign patient to ward and available bed</p>
+            </div>
+          </Link>
+
+          <button 
+            className="quick-action-card"
+            onClick={() => setIsScannerOpen(true)}
+          >
+            <div className="quick-action-icon">📷</div>
+            <div className="quick-action-content">
+              <h4>Scan QR Code</h4>
+              <p>Scan wristband to quickly locate patient</p>
+            </div>
+          </button>
+
+          <Link to="/admission-doctor/lookup" className="quick-action-card">
+            <div className="quick-action-icon">🔍</div>
+            <div className="quick-action-content">
+              <h4>Patient Lookup</h4>
+              <p>Search active and registered patients</p>
+            </div>
+          </Link>
+
+          <Link to="/admin/patients" className="quick-action-card">
+            <div className="quick-action-icon">🗂️</div>
+            <div className="quick-action-content">
+              <h4>Patient Directory</h4>
+              <p>View complete hospital master directory</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Group 2: Transfers & Care */}
+      <div className="action-group">
+        <div className="action-group-title">
+          <span>🚑</span> Transfers & Clinical Care
+        </div>
+        <div className="quick-actions-grid">
+          <Link to="/admission-doctor/vitals/new" className="quick-action-card">
+            <div className="quick-action-icon">🩸</div>
+            <div className="quick-action-content">
+              <h4>Log Vitals</h4>
+              <p>Record temperature, BP, pulse & SpO2</p>
+            </div>
+          </Link>
+
+          <Link to="/admission-doctor/transfers/internal/new" className="quick-action-card">
+            <div className="quick-action-icon">🔄</div>
+            <div className="quick-action-content">
+              <h4>Internal Transfer</h4>
+              <p>Move patient between hospital wards or beds</p>
+            </div>
+          </Link>
+
+          <Link to="/admission-doctor/transfers/external/new" className="quick-action-card">
+            <div className="quick-action-icon">🚑</div>
+            <div className="quick-action-content">
+              <h4>External Transfer</h4>
+              <p>Send patient to partner hospital</p>
+            </div>
+          </Link>
+
+          <Link to="/admission-doctor/transfers/external/return" className="quick-action-card">
+            <div className="quick-action-icon">🏥</div>
+            <div className="quick-action-content">
+              <h4>Return Patient</h4>
+              <p>Readmit returning external transfer patient</p>
+            </div>
+          </Link>
+
+          <Link to="/admission-doctor/transfers/history" className="quick-action-card">
+            <div className="quick-action-icon">📜</div>
+            <div className="quick-action-content">
+              <h4>Transfer History</h4>
+              <p>Audit trail of all patient transfer logs</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Section 3: Active Admitted Patients Table */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>🛌</span> Currently Admitted Patients ({isLoading ? '...' : admissions.length})
+        </h2>
+      </div>
 
       <DataTable 
         columns={['ID', 'Patient Name', 'Location', 'Admitted Date', 'Status', 'Actions']} 

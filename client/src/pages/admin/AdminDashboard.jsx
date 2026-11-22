@@ -12,16 +12,17 @@ import StatCard from '../../components/ui/StatCard';
 // AdminDashboard.jsx
 // =============================================================================
 // Purpose:
-//   System Administrator Dashboard View.
-//   Fetches live stats from /api/dashboard/summary.
-//   Note: Shortage alerts and warnings are now centralized in the top notification
-//   bell and Alert Center page to keep the dashboard clean.
+//   System Administrator Dashboard View for the Hospital Ward Management System.
+//   Presents high-level hospital statistics, bed occupancy, and quick access
+//   to administrative modules (users, wards, departments, and audit logs).
 // =============================================================================
 
 const AdminDashboard = () => {
+  // Grab current authenticated admin user details
   const { user } = useAuth();
   const { addToast } = useToast();
   
+  // Dashboard statistics state
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalWards: 0,
@@ -31,6 +32,15 @@ const AdminDashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Formatted date string for the welcome strip
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  // Fetch summary metrics from the backend
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
@@ -67,118 +77,162 @@ const AdminDashboard = () => {
 
   return (
     <div className="dashboard-page">
+      {/* Top Header */}
       <PageHeader 
         title="Admin Dashboard" 
-        subtitle={`Welcome back, ${user?.fullName}. Here is the system overview.`}
+        subtitle="Hospital Ward & Resource Management System"
         icon="👑"
       />
 
-      {/* KPI Cards Grid */}
-      <div className="dashboard-cards-grid" style={{ marginBottom: '40px' }}>
+      {/* University Project Welcome Banner Strip */}
+      <div className="dashboard-welcome-strip">
+        <div className="welcome-strip-left">
+          <div className="welcome-strip-avatar">👑</div>
+          <div className="welcome-strip-text">
+            <h3>Welcome back, {user?.fullName || 'Administrator'}</h3>
+            <p>System Administrator • Full Hospital Oversight</p>
+          </div>
+        </div>
+        <div className="welcome-strip-right">
+          <span>📅 {currentDate}</span>
+        </div>
+      </div>
+
+      {/* Section 1: KPI Statistics Overview */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>📊</span> Hospital Overview & Live Metrics
+        </h2>
+      </div>
+
+      <div className="dashboard-cards-grid" style={{ marginBottom: '32px' }}>
         <StatCard 
           title="Total Users" 
           value={isLoading ? '...' : stats.totalUsers} 
-          icon="👥" 
+          icon="👥"
+          description="Registered hospital staff accounts"
         />
         <StatCard 
           title="Active Wards" 
           value={isLoading ? '...' : stats.totalWards} 
           icon="🏥" 
+          description="Operational clinical units"
         />
         <StatCard 
           title="Total Beds" 
           value={isLoading ? '...' : stats.totalBeds} 
           icon="🛏️" 
+          description="Configured patient beds"
         />
         <StatCard 
           title="Admitted Patients" 
           value={isLoading ? '...' : stats.activePatients} 
           icon="🩺" 
+          description="Currently admitted patients"
         />
-        <Link to="/alerts" style={{ textDecoration: 'none' }}>
-          <StatCard 
-            title="Shortage Alerts" 
-            value={isLoading ? '...' : stats.activeAlerts} 
-            icon="🚨"
-            type={stats.activeAlerts > 0 ? 'shortage' : 'default'}
-          />
-        </Link>
+        <StatCard 
+          title="Shortage Alerts" 
+          value={isLoading ? '...' : stats.activeAlerts} 
+          icon="🚨"
+          type={stats.activeAlerts > 0 ? 'shortage' : 'default'}
+          description={stats.activeAlerts > 0 ? 'Resource threshold exceeded' : 'All resources normal'}
+          to="/alerts"
+        />
       </div>
 
-      {/* Quick Action Operations */}
-      <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Administrative Modules</h2>
-      <div className="dashboard-cards-grid">
-        <Link to="/admin/users" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer' }}>
-            <div className="card-header">
-              <span className="card-icon">👥</span>
-              <h3>Manage Users</h3>
-            </div>
-            <p className="card-description">
-              Create, update, and manage role-based staff accounts and ward assignments.
-            </p>
-          </div>
-        </Link>
+      {/* Section 2: Administrative Modules categorized */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>⚙️</span> Hospital Management Modules
+        </h2>
+      </div>
 
-        <Link to="/admin/wards" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer' }}>
-            <div className="card-header">
-              <span className="card-icon">🏥</span>
-              <h3>Manage Wards</h3>
+      {/* Group 1: Configuration & Accounts */}
+      <div className="action-group">
+        <div className="action-group-title">
+          <span>🏢</span> System Structure & Staff
+        </div>
+        <div className="quick-actions-grid">
+          <Link to="/admin/users" className="quick-action-card">
+            <div className="quick-action-icon">👥</div>
+            <div className="quick-action-content">
+              <h4>Manage Users</h4>
+              <p>Staff accounts and role permissions</p>
             </div>
-            <p className="card-description">
-              Configure hospital wards, bed thresholds, and assigned specialties.
-            </p>
-          </div>
-        </Link>
+          </Link>
 
-        <Link to="/admin/departments" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer' }}>
-            <div className="card-header">
-              <span className="card-icon">🏢</span>
-              <h3>Departments</h3>
+          <Link to="/admin/wards" className="quick-action-card">
+            <div className="quick-action-icon">🏥</div>
+            <div className="quick-action-content">
+              <h4>Manage Wards</h4>
+              <p>Wards, capacities and thresholds</p>
             </div>
-            <p className="card-description">
-              Organize medical departments, clinical disciplines, and facilities.
-            </p>
-          </div>
-        </Link>
+          </Link>
 
-        <Link to="/admin/hospitals" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer' }}>
-            <div className="card-header">
-              <span className="card-icon">🚑</span>
-              <h3>External Hospitals</h3>
+          <Link to="/admin/departments" className="quick-action-card">
+            <div className="quick-action-icon">🏢</div>
+            <div className="quick-action-content">
+              <h4>Departments</h4>
+              <p>Clinical departments & branches</p>
             </div>
-            <p className="card-description">
-              Manage partner hospitals and transfer destination directory.
-            </p>
-          </div>
-        </Link>
+          </Link>
 
-        <Link to="/alerts" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer', borderLeft: stats.activeAlerts > 0 ? '4px solid #ef4444' : undefined }}>
-            <div className="card-header">
-              <span className="card-icon">🚨</span>
-              <h3>Shortage Alerts {stats.activeAlerts > 0 && `(${stats.activeAlerts})`}</h3>
+          <Link to="/admin/hospitals" className="quick-action-card">
+            <div className="quick-action-icon">🚑</div>
+            <div className="quick-action-content">
+              <h4>External Hospitals</h4>
+              <p>Partner transfer network directory</p>
             </div>
-            <p className="card-description">
-              Review and resolve active bed shortages and medical equipment flags.
-            </p>
-          </div>
-        </Link>
+          </Link>
+        </div>
+      </div>
 
-        <Link to="/admin/admissions" style={{ textDecoration: 'none' }}>
-          <div className="dash-card" style={{ cursor: 'pointer' }}>
-            <div className="card-header">
-              <span className="card-icon">📜</span>
-              <h3>Admission History</h3>
+      {/* Group 2: Audits, Logs & Resource Tracking */}
+      <div className="action-group">
+        <div className="action-group-title">
+          <span>📜</span> Monitoring, History & Alerts
+        </div>
+        <div className="quick-actions-grid">
+          <Link 
+            to="/alerts" 
+            className={`quick-action-card ${stats.activeAlerts > 0 ? 'highlight-red' : ''}`}
+          >
+            <div className="quick-action-icon">🚨</div>
+            <div className="quick-action-content">
+              <h4>
+                Shortage Alerts
+                {stats.activeAlerts > 0 && (
+                  <span className="badge-counter">{stats.activeAlerts}</span>
+                )}
+              </h4>
+              <p>Bed and equipment threshold alerts</p>
             </div>
-            <p className="card-description">
-              Search and audit all historical patient stays, admissions, and discharges.
-            </p>
-          </div>
-        </Link>
+          </Link>
+
+          <Link to="/admin/admissions" className="quick-action-card">
+            <div className="quick-action-icon">📜</div>
+            <div className="quick-action-content">
+              <h4>Admission History</h4>
+              <p>Audit historical patient records</p>
+            </div>
+          </Link>
+
+          <Link to="/admin/transfers" className="quick-action-card">
+            <div className="quick-action-icon">🔄</div>
+            <div className="quick-action-content">
+              <h4>Transfer History</h4>
+              <p>Internal and external transfer audits</p>
+            </div>
+          </Link>
+
+          <Link to="/admin/patients" className="quick-action-card">
+            <div className="quick-action-icon">🗂️</div>
+            <div className="quick-action-content">
+              <h4>Patient Directory</h4>
+              <p>Complete hospital master patient search</p>
+            </div>
+          </Link>
+        </div>
       </div>
 
     </div>

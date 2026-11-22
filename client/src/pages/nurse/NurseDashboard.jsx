@@ -9,7 +9,7 @@
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -18,6 +18,7 @@ import { useToast } from '../../context/ToastContext';
 import PageHeader from '../../components/ui/PageHeader';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
+import StatCard from '../../components/ui/StatCard';
 import QRPrintModal from '../../components/ui/QRPrintModal';
 import QRScannerModal from '../../components/ui/QRScannerModal';
 
@@ -40,7 +41,15 @@ const NurseDashboard = () => {
   // State for toggling the camera scanner modal
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
-  // Fetch all active admitted patients across wards
+  // Formatted date string for the student project welcome banner
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  // Fetch all active admitted patients and pending discharge request count
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
@@ -96,80 +105,160 @@ const NurseDashboard = () => {
       {/* Page Header */}
       <PageHeader 
         title="Nurse Operations Dashboard" 
-        subtitle={`Welcome back, ${user?.fullName || 'Nurse'}.`}
+        subtitle="Patient Care, Vitals Monitoring & Hospital Transfers"
         icon="👩‍⚕️"
       />
 
-      {/* Quick Action Buttons Row */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        <button 
-          className="action-btn" 
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: pendingRequestsCount > 0 ? '#fef3c7' : '#ffffff', 
-            border: pendingRequestsCount > 0 ? '1px solid #f59e0b' : '1px solid #cbd5e1',
-            color: pendingRequestsCount > 0 ? '#b45309' : '#0f172a',
-            fontWeight: 600
-          }} 
-          onClick={() => navigate('/nurse/requests')}
-        >
-          📋 Discharge Requests {pendingRequestsCount > 0 && `(${pendingRequestsCount})`}
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/nurse/lookup')}
-        >
-          🔍 Patient Lookup
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/admin/patients')}
-        >
-          🗂️ Patient Directory
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => setIsScannerOpen(true)}
-        >
-          📷 Scan QR
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/nurse/vitals/new')}
-        >
-          🩸 Log Vitals
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/nurse/transfers/internal/new')}
-        >
-          🔄 Internal Transfer
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/nurse/transfers/external/new')}
-        >
-          🚑 External Transfer
-        </button>
-        <button 
-          className="action-btn" 
-          style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1' }} 
-          onClick={() => navigate('/nurse/transfers/external/return')}
-        >
-          🏥 Return Patient
-        </button>
+      {/* University Project Welcome Banner Strip */}
+      <div className="dashboard-welcome-strip">
+        <div className="welcome-strip-left">
+          <div className="welcome-strip-avatar">👩‍⚕️</div>
+          <div className="welcome-strip-text">
+            <h3>Welcome back, {user?.fullName || 'Staff Nurse'}</h3>
+            <p>Staff Nurse • Inpatient Nursing Care & Ward Duty</p>
+          </div>
+        </div>
+        <div className="welcome-strip-right">
+          <span>📅 {currentDate}</span>
+        </div>
       </div>
 
-      {/* Active Admitted Patients Table */}
-      <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: '#0f172a' }}>
-        Active Admitted Patients
-      </h3>
+      {/* Section 1: KPI Summary Cards */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>📊</span> Inpatient Care Metrics
+        </h2>
+      </div>
+
+      <div className="dashboard-cards-grid" style={{ marginBottom: '32px' }}>
+        <StatCard 
+          title="Active Ward Patients" 
+          value={isLoading ? '...' : admissions.length} 
+          icon="👥"
+          description="Inpatients currently admitted across hospital wards"
+        />
+        <StatCard 
+          title="Discharge Requests" 
+          value={isLoading ? '...' : pendingRequestsCount} 
+          icon="📋"
+          type={pendingRequestsCount > 0 ? 'maintenance' : 'default'}
+          description={pendingRequestsCount > 0 ? 'Awaiting nurse confirmation & bed release' : 'All discharge requests verified'}
+          to="/nurse/requests"
+        />
+      </div>
+
+      {/* Section 2: Grouped Operations */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>⚡</span> Nursing Operations & Quick Actions
+        </h2>
+      </div>
+
+      {/* Group 1: Patient Care & Vitals */}
+      <div className="action-group">
+        <div className="action-group-title">
+          <span>🩸</span> Patient Care & Clinical Tracking
+        </div>
+        <div className="quick-actions-grid">
+          <Link 
+            to="/nurse/requests" 
+            className={`quick-action-card ${pendingRequestsCount > 0 ? 'highlight-amber' : ''}`}
+          >
+            <div className="quick-action-icon">📋</div>
+            <div className="quick-action-content">
+              <h4>
+                Discharge Requests
+                {pendingRequestsCount > 0 && (
+                  <span className="badge-counter amber">{pendingRequestsCount}</span>
+                )}
+              </h4>
+              <p>Review & approve doctor discharge orders</p>
+            </div>
+          </Link>
+
+          <button 
+            className="quick-action-card highlight-blue"
+            onClick={() => setIsScannerOpen(true)}
+          >
+            <div className="quick-action-icon">📷</div>
+            <div className="quick-action-content">
+              <h4>Scan QR Code</h4>
+              <p>Scan wristband to quickly log vitals</p>
+            </div>
+          </button>
+
+          <Link to="/nurse/vitals/new" className="quick-action-card">
+            <div className="quick-action-icon">🩸</div>
+            <div className="quick-action-content">
+              <h4>Log Vitals</h4>
+              <p>Record temperature, BP, pulse & SpO2</p>
+            </div>
+          </Link>
+
+          <Link to="/nurse/lookup" className="quick-action-card">
+            <div className="quick-action-icon">🔍</div>
+            <div className="quick-action-content">
+              <h4>Patient Lookup</h4>
+              <p>Find patient by NIC, name, or bed</p>
+            </div>
+          </Link>
+
+          <Link to="/admin/patients" className="quick-action-card">
+            <div className="quick-action-icon">🗂️</div>
+            <div className="quick-action-content">
+              <h4>Patient Directory</h4>
+              <p>View complete hospital patient directory</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Group 2: Transfer Operations */}
+      <div className="action-group">
+        <div className="action-group-title">
+          <span>🚑</span> Patient Transfers & Movement
+        </div>
+        <div className="quick-actions-grid">
+          <Link to="/nurse/transfers/internal/new" className="quick-action-card">
+            <div className="quick-action-icon">🔄</div>
+            <div className="quick-action-content">
+              <h4>Internal Transfer</h4>
+              <p>Move patient between wards or beds</p>
+            </div>
+          </Link>
+
+          <Link to="/nurse/transfers/external/new" className="quick-action-card">
+            <div className="quick-action-icon">🚑</div>
+            <div className="quick-action-content">
+              <h4>External Transfer</h4>
+              <p>Transfer patient to another hospital</p>
+            </div>
+          </Link>
+
+          <Link to="/nurse/transfers/external/return" className="quick-action-card">
+            <div className="quick-action-icon">🏥</div>
+            <div className="quick-action-content">
+              <h4>Return Patient</h4>
+              <p>Readmit returning external transfer patient</p>
+            </div>
+          </Link>
+
+          <Link to="/nurse/transfers/history" className="quick-action-card">
+            <div className="quick-action-icon">📜</div>
+            <div className="quick-action-content">
+              <h4>Transfer History</h4>
+              <p>View historical transfer movement logs</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Section 3: Active Admitted Patients Table */}
+      <div className="dashboard-section-header">
+        <h2 className="dashboard-section-title">
+          <span>🛌</span> Currently Admitted Inpatients ({isLoading ? '...' : admissions.length})
+        </h2>
+      </div>
 
       <DataTable 
         columns={['ID', 'Patient Name', 'Location', 'Admitted Date', 'Status', 'Actions']} 
