@@ -244,11 +244,63 @@ const findExternalTransferHistory = async (admissionId, pending) => {
   return rows;
 };
 
+// This function retrieves all internal ward transfers for a specific patient across all their admissions
+const findInternalTransfersByPatientId = async (patientId) => {
+  // Query to get all ward-to-ward transfers linked to this patient's admissions
+  const sql = `
+    SELECT 
+      t.*, 
+      p.fullName AS patientName, 
+      p.patientNIC, 
+      w1.wardName AS fromWardName, 
+      w2.wardName AS toWardName,
+      b1.bedNumber AS fromBedNumber,
+      b2.bedNumber AS toBedNumber,
+      u.fullName AS transferredByName
+    FROM wardTransfer t
+    JOIN patientAdmission a ON t.admissionId = a.id
+    JOIN patient p ON a.patientId = p.id
+    JOIN ward w1 ON t.fromWardId = w1.id
+    JOIN ward w2 ON t.toWardId = w2.id
+    LEFT JOIN bed b1 ON t.fromBedId = b1.id
+    LEFT JOIN bed b2 ON t.toBedId = b2.id
+    JOIN users u ON t.transferredBy = u.id
+    WHERE a.patientId = ?
+    ORDER BY t.transferDate DESC
+  `;
+  const [rows] = await db.query(sql, [patientId]);
+  return rows;
+};
+
+// This function retrieves all external hospital transfers for a specific patient across all their admissions
+const findExternalTransfersByPatientId = async (patientId) => {
+  // Query to get all external transfers linked to this patient's admissions
+  const sql = `
+    SELECT 
+      ht.*, 
+      p.fullName AS patientName, 
+      p.patientNIC, 
+      h.hospitalName, 
+      u.fullName AS transferredByName
+    FROM hospitalTransfer ht
+    JOIN patientAdmission a ON ht.admissionId = a.id
+    JOIN patient p ON a.patientId = p.id
+    JOIN hospital h ON ht.hospitalId = h.id
+    JOIN users u ON ht.transferredBy = u.id
+    WHERE a.patientId = ?
+    ORDER BY ht.transferOutDate DESC
+  `;
+  const [rows] = await db.query(sql, [patientId]);
+  return rows;
+};
+
 module.exports = {
   transactionInternalTransfer,
   transactionExternalTransfer,
   transactionReturnExternalTransfer,
   findAllHospitals,
   findInternalTransferHistory,
-  findExternalTransferHistory
+  findExternalTransferHistory,
+  findInternalTransfersByPatientId,
+  findExternalTransfersByPatientId
 };

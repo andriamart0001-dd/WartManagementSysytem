@@ -137,11 +137,21 @@ const rejectRequest = async (id, reviewNotes, userId) => {
   return updatedRequest;
 };
 
+// This function retrieves all clinical requests for a specific patient
+const getRequestsByPatientId = async (patientId) => {
+  if (!patientId) {
+    throw new Error('patientId is required');
+  }
+  const requests = await clinicalRequestModel.findRequestsByPatientId(patientId);
+  return requests;
+};
+
 module.exports = {
   getRequests,
   getRequestById,
   getPendingCount,
   createDischargeRequest,
   approveRequest,
-  rejectRequest
+  rejectRequest,
+  getRequestsByPatientId
 };

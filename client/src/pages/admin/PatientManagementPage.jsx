@@ -311,6 +311,35 @@ const PatientManagementPage = () => {
                   ⚪ Not currently admitted
                 </div>
               )}
+
+              {/* Full Medical History Page Navigation Button */}
+              <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
+                <button
+                  type="button"
+                  className="action-btn"
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 16px',
+                    backgroundColor: '#0284c7',
+                    color: '#ffffff',
+                    borderColor: '#0284c7',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    navigate(`/admin/patients/${selectedPatientHistory.patient?.id}/history`);
+                  }}
+                >
+                  📄 View Full Timeline & Medical History →
+                </button>
+              </div>
             </div>
 
             {/* List of Previous Stays */}

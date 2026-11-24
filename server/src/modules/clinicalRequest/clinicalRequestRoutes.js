@@ -28,6 +28,14 @@ router.get(
   clinicalRequestController.getPendingCount
 );
 
+// GET /api/requests/patient/:patientId — View all requests for a specific patient
+router.get(
+  '/patient/:patientId',
+  authenticateJWT,
+  authorizeRoles(ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.DOCTOR, ROLES.NURSE, ROLES.ADMISSION_DOCTOR),
+  clinicalRequestController.getRequestsByPatientId
+);
+
 // GET /api/requests/:id — View single request details
 router.get(
   '/:id',

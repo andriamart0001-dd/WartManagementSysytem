@@ -1295,3 +1295,515 @@ a.dash-card, a.dash-card:visited, a.dash-card:hover, a.dash-card:active {
   color: #b45309;
   font-weight: 600;
 }
+
+
+/* -----------------------------------------------------------------------------
+   9. BED AVAILABILITY LIVE GRID & FLOOR MAP STYLES (PHASE 1)
+   ----------------------------------------------------------------------------- */
+
+/* Bed KPI Summary Banner */
+.bed-kpi-summary {
+  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+}
+
+.bed-kpi-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+}
+
+.bed-kpi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bed-kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bed-kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.bed-kpi-occupancy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.occupancy-bar-bg {
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.occupancy-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* Bed Filter & View Toolbar */
+.bed-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.bed-toolbar-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.bed-search-input {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  min-width: 200px;
+  outline: none;
+  background-color: #ffffff;
+}
+
+.bed-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.bed-section-select {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  background-color: #ffffff;
+  outline: none;
+  cursor: pointer;
+}
+
+.bed-section-select:focus {
+  border-color: #3b82f6;
+}
+
+.bed-toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Status Filter Pill Buttons */
+.bed-status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bed-status-btn {
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.bed-status-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.bed-status-btn.active {
+  background-color: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+.bed-status-btn.active.available {
+  background-color: #059669;
+  border-color: #059669;
+  color: #ffffff;
+}
+
+.bed-status-btn.active.occupied {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.bed-status-btn.active.maintenance {
+  background-color: #d97706;
+  border-color: #d97706;
+  color: #ffffff;
+}
+
+/* View Mode Switcher Toggle */
+.bed-view-toggle {
+  display: flex;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.view-toggle-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  background-color: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.view-toggle-btn:hover {
+  color: #0f172a;
+  background-color: #f8fafc;
+}
+
+.view-toggle-btn.active {
+  background-color: #0284c7;
+  color: #ffffff;
+}
+
+/* Floor Map Bed Tiles Grid */
+.bed-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.bed-tile {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 155px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.bed-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* Bed Tile Status Variants */
+.bed-tile-available {
+  border-left-color: #10b981;
+  background-color: #fcfdfc;
+}
+
+.bed-tile-available:hover {
+  border-color: #86efac;
+}
+
+.bed-tile-occupied {
+  border-left-color: #ef4444;
+  background-color: #fffdfd;
+}
+
+.bed-tile-occupied:hover {
+  border-color: #fca5a5;
+}
+
+.bed-tile-maintenance {
+  border-left-color: #f59e0b;
+  background-color: #fffdf7;
+}
+
+.bed-tile-maintenance:hover {
+  border-color: #fde68a;
+}
+
+/* Bed Tile Header */
+.bed-tile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.bed-tile-number {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bed-tile-section {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background-color: #f1f5f9;
+  color: #475569;
+  white-space: nowrap;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Bed Tile Body */
+.bed-tile-body {
+  margin: 6px 0 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bed-occupant-box {
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-top: 4px;
+}
+
+.bed-occupant-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #991b1b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bed-occupant-sub {
+  font-size: 11px;
+  color: #b91c1c;
+  margin-top: 2px;
+}
+
+.bed-available-msg {
+  font-size: 12px;
+  color: #15803d;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.bed-maintenance-msg {
+  font-size: 12px;
+  color: #b45309;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* Bed Tile Footer */
+.bed-tile-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+/* Bed Details Modal Popup */
+.bed-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+
+.bed-modal-dialog {
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  animation: modal-enter 0.2s ease-out;
+}
+
+@keyframes modal-enter {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.bed-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f8fafc;
+}
+
+.bed-modal-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.bed-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px;
+}
+
+.bed-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bed-modal-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed #f1f5f9;
+  font-size: 14px;
+}
+
+.bed-modal-row-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.bed-modal-row-value {
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+}
+
+.bed-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+
+/* =============================================================================
+   10. PATIENT MEDICAL HISTORY TIMELINE & PRINT STYLES
+   ============================================================================= */
+
+/* Elements only visible when printing on physical paper or PDF */
+.print-only {
+  display: none !important;
+}
+
+/* Patient History Page Layout Adjustments */
+.patient-history-page {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+/* Print-specific layout rules (Triggered when user clicks 'Print Record') */
+@media print {
+  /* Hide all interactive navigation, topbar, sidebars, and action buttons */
+  .no-print,
+  .sidebar,
+  .app-sidebar,
+  .navbar,
+  .top-navbar,
+  .app-navbar,
+  .notification-bell-btn,
+  .notification-dropdown,
+  .action-btn,
+  button,
+  input,
+  select,
+  textarea {
+    display: none !important;
+  }
+
+  /* Make sure background is white and text is dark for clear readability */
+  body,
+  .app-layout,
+  .main-content,
+  .dashboard-page,
+  .patient-history-page {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Show print-only sections (like all vitals expanded) */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Prevent awkward page breaks inside cards */
+  .patient-demographics-card,
+  .patient-history-page > div {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  /* Remove background decorations */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

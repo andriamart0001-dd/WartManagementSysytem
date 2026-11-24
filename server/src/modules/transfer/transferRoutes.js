@@ -37,6 +37,20 @@ router.get('/external',
   transferController.getExternalTransferHistory
 );
 
+// GET /api/transfers/patient/:patientId/internal - View all internal transfers for a patient
+router.get('/patient/:patientId/internal',
+  authenticateJWT,
+  authorizeRoles(...allowedTransferRoles),
+  transferController.getPatientInternalTransfers
+);
+
+// GET /api/transfers/patient/:patientId/external - View all external transfers for a patient
+router.get('/patient/:patientId/external',
+  authenticateJWT,
+  authorizeRoles(...allowedTransferRoles),
+  transferController.getPatientExternalTransfers
+);
+
 // =============================================================================
 // POST ROUTES - Perform Transfers
 // =============================================================================

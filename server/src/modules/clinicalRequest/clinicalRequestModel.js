@@ -190,11 +190,52 @@ const updateRequestStatus = async (id, requestStatus, reviewedBy, reviewNotes, u
   return result.affectedRows;
 };
 
+// This function retrieves all clinical requests for a specific patient across all their admissions
+const findRequestsByPatientId = async (patientId) => {
+  // Query to get all clinical requests linked to admissions for this patient
+  const sql = `
+    SELECT 
+      cr.id,
+      cr.admissionId,
+      cr.requestType,
+      cr.requestStatus,
+      cr.requestedBy,
+      cr.requestNotes,
+      cr.reviewedBy,
+      cr.reviewedAt,
+      cr.reviewNotes,
+      cr.createdAt,
+      cr.updatedAt,
+      p.fullName AS patientName,
+      p.patientNIC,
+      pa.wardId,
+      pa.bedId,
+      pa.status AS admissionStatus,
+      w.wardName,
+      b.bedNumber,
+      uReq.fullName AS requestedByName,
+      uRev.fullName AS reviewedByName
+    FROM clinicalRequest cr
+    JOIN patientAdmission pa ON cr.admissionId = pa.id
+    JOIN patient p ON pa.patientId = p.id
+    JOIN ward w ON pa.wardId = w.id
+    LEFT JOIN bed b ON pa.bedId = b.id
+    JOIN users uReq ON cr.requestedBy = uReq.id
+    LEFT JOIN users uRev ON cr.reviewedBy = uRev.id
+    WHERE pa.patientId = ?
+    ORDER BY cr.createdAt DESC
+  `;
+
+  const [rows] = await db.query(sql, [patientId]);
+  return rows;
+};
+
 module.exports = {
   findAllRequests,
   findRequestById,
   findPendingRequestByAdmissionId,
   countPendingRequests,
   createRequest,
-  updateRequestStatus
+  updateRequestStatus,
+  findRequestsByPatientId
 };

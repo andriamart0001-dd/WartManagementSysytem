@@ -46,11 +46,23 @@ const getExternalTransferHistory = async (admissionId, pending) => {
   return await transferModel.findExternalTransferHistory(admissionId, pending);
 };
 
+// Fetch all internal ward transfers for a patient
+const getInternalTransfersByPatientId = async (patientId) => {
+  return await transferModel.findInternalTransfersByPatientId(patientId);
+};
+
+// Fetch all external hospital transfers for a patient
+const getExternalTransfersByPatientId = async (patientId) => {
+  return await transferModel.findExternalTransfersByPatientId(patientId);
+};
+
 module.exports = {
   processInternalTransfer,
   processExternalTransfer,
   returnExternalTransfer,
   getAllHospitals,
   getInternalTransferHistory,
-  getExternalTransferHistory
+  getExternalTransferHistory,
+  getInternalTransfersByPatientId,
+  getExternalTransfersByPatientId
 };

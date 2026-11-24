@@ -87,11 +87,47 @@ const getExternalTransferHistory = async (req, res) => {
   }
 };
 
+// This controller function gets all internal ward transfers for a single patient
+const getPatientInternalTransfers = async (req, res) => {
+  try {
+    const patientId = req.params.patientId;
+    const transfers = await transferService.getInternalTransfersByPatientId(patientId);
+
+    return res.status(200).json({
+      message: 'Patient internal transfers retrieved successfully',
+      count: transfers.length,
+      transfers
+    });
+  } catch (error) {
+    console.error('Error fetching patient internal transfers:', error);
+    return res.status(500).json({ message: 'Error retrieving patient internal transfers' });
+  }
+};
+
+// This controller function gets all external hospital transfers for a single patient
+const getPatientExternalTransfers = async (req, res) => {
+  try {
+    const patientId = req.params.patientId;
+    const transfers = await transferService.getExternalTransfersByPatientId(patientId);
+
+    return res.status(200).json({
+      message: 'Patient external transfers retrieved successfully',
+      count: transfers.length,
+      transfers
+    });
+  } catch (error) {
+    console.error('Error fetching patient external transfers:', error);
+    return res.status(500).json({ message: 'Error retrieving patient external transfers' });
+  }
+};
+
 module.exports = {
   internalTransfer,
   externalTransfer,
   returnExternalTransfer,
   getHospitals,
   getInternalTransferHistory,
-  getExternalTransferHistory
+  getExternalTransferHistory,
+  getPatientInternalTransfers,
+  getPatientExternalTransfers
 };

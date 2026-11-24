@@ -160,11 +160,31 @@ const rejectRequest = async (req, res) => {
   }
 };
 
+// This handler retrieves all clinical requests for a specific patient
+const getRequestsByPatientId = async (req, res) => {
+  try {
+    const patientId = req.params.patientId;
+    const requests = await clinicalRequestService.getRequestsByPatientId(patientId);
+
+    return res.status(200).json({
+      message: 'Patient clinical requests retrieved successfully',
+      count: requests.length,
+      requests: requests
+    });
+  } catch (error) {
+    console.error('Error fetching patient clinical requests:', error);
+    return res.status(500).json({
+      message: 'Error retrieving patient clinical requests'
+    });
+  }
+};
+
 module.exports = {
   getRequests,
   getRequestById,
   getPendingCount,
   createDischargeRequest,
   approveRequest,
-  rejectRequest
+  rejectRequest,
+  getRequestsByPatientId
 };
