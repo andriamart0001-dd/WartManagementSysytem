@@ -1807,3 +1807,57 @@ a.dash-card, a.dash-card:visited, a.dash-card:hover, a.dash-card:active {
     print-color-adjust: exact !important;
   }
 }
+
+
+/* =============================================================================
+   11. SIDEBAR FIXED SCROLL FIX
+   ============================================================================= */
+/* Keeps the top navbar and left sidebar fixed in place while only the main
+   content area scrolls independently. */
+
+/* Lock the overall page shell to the exact screen height */
+.layout-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Keep the top navbar fixed at 64px without shrinking */
+.navbar {
+  flex-shrink: 0;
+}
+
+/* Lock the middle area (sidebar + content) to the remaining screen height */
+.layout-body {
+  height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+/* Keep the sidebar fixed at 240px width and allow its own scroll if needed */
+.sidebar {
+  height: 100%;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* Let the main content area fill the remaining space and scroll on its own */
+.content-area {
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Preserve full mobile slide-over sidebar height between top (64px) and bottom (0) */
+@media (max-width: 768px) {
+  .sidebar {
+    height: auto;
+  }
+}
+
+/* Allow full multi-page printing without clipping inside fixed-height boxes */
+@media print {
+  .layout-container,
+  .layout-body,
+  .content-area {
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
