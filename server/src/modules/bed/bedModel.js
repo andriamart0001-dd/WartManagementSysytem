@@ -3,26 +3,29 @@
 // =============================================================================
 
 const db = require('../../config/db');
+const { ADMISSION_STATUS } = require('../../constants');
 
 // This function retrieves all beds, optionally filtered by wardId.
 // It joins the ward table for the ward name, the section table for the section name,
-// and the patientAdmission table to retrieve active occupant details when occupied.
+// and the patientAdmission + patient tables to retrieve active occupant details when occupied.
 const findAllBeds = async (wardId) => {
+  // Query to get every bed along with its ward, section, and active patient occupant details
   let sql = `
     SELECT 
       b.*, 
       w.wardName, 
       s.sectionName,
       pa.id AS activeAdmissionId,
-      pa.patientName,
-      pa.patientNIC,
+      p.fullName AS patientName,
+      p.patientNIC,
       pa.admissionDate
     FROM bed b
     JOIN ward w ON b.wardId = w.id
     LEFT JOIN section s ON b.sectionId = s.id
-    LEFT JOIN patientAdmission pa ON pa.bedId = b.id AND pa.status = 'admitted'
+    LEFT JOIN patientAdmission pa ON pa.bedId = b.id AND pa.status = ?
+    LEFT JOIN patient p ON pa.patientId = p.id
   `;
-  const values = [];
+  const values = [ADMISSION_STATUS.ADMITTED];
 
   if (wardId) {
     sql += ' WHERE b.wardId = ?';
@@ -38,23 +41,25 @@ const findAllBeds = async (wardId) => {
 // This function finds a single bed by primary key ID, including ward name, section name,
 // and any currently admitted occupant information.
 const findBedById = async (id) => {
+  // Query to get a single bed along with its ward, section, and active patient occupant details
   const sql = `
     SELECT 
       b.*, 
       w.wardName, 
       s.sectionName,
       pa.id AS activeAdmissionId,
-      pa.patientName,
-      pa.patientNIC,
+      p.fullName AS patientName,
+      p.patientNIC,
       pa.admissionDate
     FROM bed b
     JOIN ward w ON b.wardId = w.id
     LEFT JOIN section s ON b.sectionId = s.id
-    LEFT JOIN patientAdmission pa ON pa.bedId = b.id AND pa.status = 'admitted'
+    LEFT JOIN patientAdmission pa ON pa.bedId = b.id AND pa.status = ?
+    LEFT JOIN patient p ON pa.patientId = p.id
     WHERE b.id = ? 
     LIMIT 1
   `;
-  const [rows] = await db.query(sql, [id]);
+  const [rows] = await db.query(sql, [ADMISSION_STATUS.ADMITTED, id]);
   return rows.length > 0 ? rows[0] : null;
 };
 
