@@ -116,6 +116,110 @@ const getEquipmentShortages = async (wardId = null) => {
   return rows;
 };
 
+// Get bed counts (available, occupied, maintenance, total) grouped by each active ward
+const getBedsBreakdownByWard = async () => {
+  // Query to fetch every active ward with its bed counts broken down by bed status
+  const sql = `
+    SELECT
+      w.id AS wardId,
+      w.wardName,
+      w.wardType,
+      w.minBedThreshold,
+      SUM(CASE WHEN b.bedStatus = ? THEN 1 ELSE 0 END) AS availableBeds,
+      SUM(CASE WHEN b.bedStatus = ? THEN 1 ELSE 0 END) AS occupiedBeds,
+      SUM(CASE WHEN b.bedStatus = ? THEN 1 ELSE 0 END) AS maintenanceBeds,
+      COUNT(b.id) AS totalBeds
+    FROM ward w
+    LEFT JOIN bed b ON w.id = b.wardId
+    WHERE w.status = ?
+    GROUP BY w.id
+    ORDER BY w.wardName ASC
+  `;
+
+  const values = [
+    BED_STATUS.AVAILABLE,
+    BED_STATUS.OCCUPIED,
+    BED_STATUS.MAINTENANCE,
+    WARD_STATUS.ACTIVE
+  ];
+
+  const [rows] = await db.query(sql, values);
+  return rows;
+};
+
+// Get all medical equipment items across every ward for the system report
+const getEquipmentBreakdownByWard = async () => {
+  // Query to fetch equipment quantities, status, threshold, and ward name
+  const sql = `
+    SELECT
+      e.id,
+      e.equipmentName,
+      e.quantity,
+      e.status,
+      e.minQuantityThreshold,
+      w.wardName
+    FROM equipment e
+    JOIN ward w ON e.wardId = w.id
+    ORDER BY w.wardName ASC, e.equipmentName ASC
+  `;
+
+  const [rows] = await db.query(sql);
+  return rows;
+};
+
+// Count patient admissions, discharges, and external transfers for the current month
+const getMonthlyAdmissionSummary = async () => {
+  // Query to summarize admissions created in the current calendar month and year
+  const sql = `
+    SELECT
+      COUNT(*) AS totalThisMonth,
+      SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS currentlyAdmitted,
+      SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS dischargedThisMonth,
+      SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS transferredThisMonth
+    FROM patientAdmission
+    WHERE MONTH(admissionDate) = MONTH(CURDATE())
+      AND YEAR(admissionDate) = YEAR(CURDATE())
+  `;
+
+  const values = [
+    ADMISSION_STATUS.ADMITTED,
+    ADMISSION_STATUS.DISCHARGED,
+    ADMISSION_STATUS.TRANSFERRED_OUT
+  ];
+
+  const [rows] = await db.query(sql, values);
+  return rows[0];
+};
+
+// Get the top 5 busiest active wards ranked by bed occupancy percentage
+const getTopFiveBusiestWards = async () => {
+  // Query to find the 5 active wards with the highest occupied-to-total bed ratio
+  const sql = `
+    SELECT
+      w.id AS wardId,
+      w.wardName,
+      w.wardType,
+      SUM(CASE WHEN b.bedStatus = ? THEN 1 ELSE 0 END) AS occupiedBeds,
+      COUNT(b.id) AS totalBeds
+    FROM ward w
+    LEFT JOIN bed b ON w.id = b.wardId
+    WHERE w.status = ?
+    GROUP BY w.id
+    HAVING totalBeds > 0
+    ORDER BY (SUM(CASE WHEN b.bedStatus = ? THEN 1 ELSE 0 END) / COUNT(b.id)) DESC, w.wardName ASC
+    LIMIT 5
+  `;
+
+  const values = [
+    BED_STATUS.OCCUPIED,
+    WARD_STATUS.ACTIVE,
+    BED_STATUS.OCCUPIED
+  ];
+
+  const [rows] = await db.query(sql, values);
+  return rows;
+};
+
 module.exports = {
   countActiveAdmissions,
   countTotalPatients,
@@ -123,5 +227,9 @@ module.exports = {
   countTotalWards,
   getBedStats,
   getWardShortages,
-  getEquipmentShortages
+  getEquipmentShortages,
+  getBedsBreakdownByWard,
+  getEquipmentBreakdownByWard,
+  getMonthlyAdmissionSummary,
+  getTopFiveBusiestWards
 };

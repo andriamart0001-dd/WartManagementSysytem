@@ -16,4 +16,11 @@ router.get('/summary',
   dashboardController.getSummary
 );
 
+// GET /api/dashboard/report - View full hospital system report (Admin only)
+router.get('/report',
+  authenticateJWT,
+  authorizeRoles(ROLES.ADMIN),
+  dashboardController.getReport
+);
+
 module.exports = router;

@@ -232,6 +232,14 @@ const AdminDashboard = () => {
               <p>Complete hospital master patient search</p>
             </div>
           </Link>
+
+          <Link to="/admin/report" className="quick-action-card highlight-blue">
+            <div className="quick-action-icon">📊</div>
+            <div className="quick-action-content">
+              <h4>System Report</h4>
+              <p>Printable hospital summary & breakdowns</p>
+            </div>
+          </Link>
         </div>
       </div>
 

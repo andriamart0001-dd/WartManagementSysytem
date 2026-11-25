@@ -34,6 +34,7 @@ import AlertManagementPage from './pages/admin/AlertManagementPage';
 import AdmissionHistoryPage from './pages/admin/AdmissionHistoryPage';
 import PatientManagementPage from './pages/admin/PatientManagementPage';
 import PatientHistoryPage from './pages/admin/PatientHistoryPage';
+import SystemReportPage from './pages/admin/SystemReportPage';
 import TransferHistoryPage from './pages/admin/TransferHistoryPage';
 import PatientRegistrationPage from './pages/staff/PatientRegistrationPage';
 import AddUserPage from './pages/admin/forms/AddUserPage';
@@ -265,6 +266,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.WARD_ADMIN, ROLES.ADMISSION_DOCTOR, ROLES.NURSE, ROLES.DOCTOR]}>
                       <PatientHistoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/report"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <SystemReportPage />
                     </ProtectedRoute>
                   }
                 />

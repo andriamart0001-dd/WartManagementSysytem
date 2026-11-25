@@ -324,6 +324,14 @@ const AppLayout = () => {
                     <span className="nav-icon">📜</span>
                     <span>Admission History</span>
                   </NavLink>
+                  <NavLink
+                    to="/admin/report"
+                    className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <span className="nav-icon">📊</span>
+                    <span>System Report</span>
+                  </NavLink>
                 </>
               )}
 
